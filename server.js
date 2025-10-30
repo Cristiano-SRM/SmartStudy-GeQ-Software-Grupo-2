@@ -14,7 +14,7 @@ const PORT = 3000;
 
 // Middleware
 app.use(cors({
-  origin: '*', // permite qualquer origem
+  origin: 'https://cristiano-srm.github.io',  // domínio do seu GitHub Pages
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type']
 }));
