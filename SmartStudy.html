@@ -396,11 +396,12 @@
         const senha = document.getElementById('loginPassword').value;
 
         try {
-            const response = await fetch('${API_URL}/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ usuario, senha })
+            const response = await fetch(`${API_URL}/login`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ usuario, senha })
 });
+
 
             const data = await response.json();
             if (response.ok) {
@@ -430,10 +431,10 @@
         }
 
         try {
-            const response = await fetch('${API_URL}/signup', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ usuario, senha })
+            const response = await fetch(`${API_URL}/signup`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ usuario, senha })
 });
 
             const data = await response.json();
