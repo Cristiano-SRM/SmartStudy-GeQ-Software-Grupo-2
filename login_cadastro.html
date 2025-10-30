@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartStudy - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reset e variáveis globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #5B8DEF;
+            --secondary-purple: #A084E8;
+            --white: #FFFFFF;
+            --text-dark: #2C3E50;
+            --text-light: #7F8C8D;
+            --border-color: #E0E6ED;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-hover: 0 8px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Container principal */
+        .container {
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: var(--shadow-hover);
+            width: 100%;
+            max-width: 450px;
+            padding: 40px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Header com logo e slogan */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .slogan {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            font-weight: 300;
+        }
+
+        /* Formulários */
+        .form-container {
+            position: relative;
+        }
+
+        .form {
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .form.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .form-title {
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        /* Campos de input */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+            background: var(--white);
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.1);
+        }
+
+        .input-group input::placeholder {
+            color: var(--text-light);
+        }
+
+        /* Botões */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-purple));
+            color: var(--white);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Link "Esqueci minha senha" */
+        .forgot-password {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .forgot-password a {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-password a:hover {
+            color: var(--secondary-purple);
+            text-decoration: underline;
+        }
+
+        /* Alternador entre Login e Cadastro */
+        .form-toggle {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .form-toggle p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .form-toggle button {
+            background: none;
+            border: 2px solid var(--primary-blue);
+            color: var(--primary-blue);
+            padding: 10px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .form-toggle button:hover {
+            background: var(--primary-blue);
+            color: var(--white);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        /* Mensagem de validação */
+        .validation-message {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .validation-message.show {
+            display: block;
+        }
+
+        /* Responsividade */
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 25px;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            .form-title {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header com Logo e Slogan -->
+        <div class="header">
+            <h1 class="logo">SmartStudy</h1>
+            <p class="slogan">Organize seus estudos de forma inteligente</p>
+        </div>
+
+        <!-- Container dos Formulários -->
+        <div class="form-container">
+            <!-- Formulário de Login -->
+            <form id="loginForm" class="form active" onsubmit="handleLogin(event); return false;">
+                <h2 class="form-title">Entrar</h2>
+                
+                <div class="input-group">
+                    <label for="loginUser">Usuário</label>
+                    <input 
+                        type="text" 
+                        id="loginUser" 
+                        name="username" 
+                        placeholder="Digite seu usuário"
+                        required
+                        autocomplete="username"
+                    >
+                </div>
+
+                <div class="input-group">
+                    <label for="loginPassword">Senha</label>
+                    <input 
+                        type="password" 
+                        id="loginPassword" 
+                        name="password" 
+                        placeholder="Digite sua senha"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary">Entrar</button>
+
+                <div class="forgot-password">
+                    <a href="#" onclick="handleForgotPassword(event)">Esqueci minha senha</a>
+                </div>
+            </form>
+
+            <!-- Formulário de Cadastro -->
+            <form id="signupForm" class="form" onsubmit="handleSignup(event); return false;">
+                <h2 class="form-title">Criar Conta</h2>
+                
+                <div class="input-group">
+                    <label for="signupUser">Usuário</label>
+                    <input 
+                        type="text" 
+                        id="signupUser" 
+                        name="username" 
+                        placeholder="Escolha um usuário"
+                        required
+                        autocomplete="username"
+                    >
+                </div>
+
+                <div class="input-group">
+                    <label for="signupPassword">Senha</label>
+                    <input 
+                        type="password" 
+                        id="signupPassword" 
+                        name="password" 
+                        placeholder="Crie uma senha"
+                        required
+                        autocomplete="new-password"
+                        minlength="6"
+                    >
+                    <div id="passwordError" class="validation-message">A senha deve ter pelo menos 6 caracteres</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="confirmPassword">Confirmar Senha</label>
+                    <input 
+                        type="password" 
+                        id="confirmPassword" 
+                        name="confirmPassword" 
+                        placeholder="Confirme sua senha"
+                        required
+                        autocomplete="new-password"
+                    >
+                    <div id="confirmError" class="validation-message">As senhas não coincidem</div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Criar Conta</button>
+            </form>
+        </div>
+
+        <!-- Alternador entre formulários -->
+        <div class="form-toggle">
+            <p id="toggleText">Não tem uma conta?</p>
+            <button type="button" id="toggleBtn" onclick="toggleForms()">Criar Conta</button>
+        </div>
+    </div>
+
+    <script>
+        // Variável para controlar qual formulário está ativo
+        let isLoginForm = true;
+
+        // Função para alternar entre os formulários
+        function toggleForms() {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            const toggleText = document.getElementById('toggleText');
+            const toggleBtn = document.getElementById('toggleBtn');
+
+            // Limpar mensagens de validação
+            clearValidationMessages();
+
+            if (isLoginForm) {
+                // Mudar para cadastro
+                loginForm.classList.remove('active');
+                signupForm.classList.add('active');
+                toggleText.textContent = 'Já tem uma conta?';
+                toggleBtn.textContent = 'Fazer Login';
+                isLoginForm = false;
+            } else {
+                // Mudar para login
+                signupForm.classList.remove('active');
+                loginForm.classList.add('active');
+                toggleText.textContent = 'Não tem uma conta?';
+                toggleBtn.textContent = 'Criar Conta';
+                isLoginForm = true;
+            }
+
+            // Limpar os campos dos formulários
+            loginForm.reset();
+            signupForm.reset();
+        }
+
+         // Função para processar o login
+    async function handleLogin(event) {
+        event.preventDefault();
+        
+        const usuario = document.getElementById('loginUser').value;
+        const senha = document.getElementById('loginPassword').value;
+
+        try {
+            const response = await fetch('https://accursed-tomb-5rxwv4q7gvr37xqq-3000.app.github.dev/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ usuario, senha })
+});
+
+            const data = await response.json();
+            if (response.ok) {
+                alert(data.message);
+                // redirecionar para a página principal se quiser:
+                // window.location.href = "paginaPrincipal.html";
+            } else {
+                alert(data.message);
+            }
+        } catch (error) {
+            alert('Erro ao conectar ao servidor.');
+            console.error(error);
+        }
+    }
+
+    // Função para processar o cadastro
+    async function handleSignup(event) {
+        event.preventDefault();
+
+        const usuario = document.getElementById('signupUser').value;
+        const senha = document.getElementById('signupPassword').value;
+        const confirmSenha = document.getElementById('confirmPassword').value;
+
+        if (senha !== confirmSenha) {
+            alert('As senhas não coincidem!');
+            return;
+        }
+
+        try {
+            const response = await fetch('https://accursed-tomb-5rxwv4q7gvr37xqq-3000.app.github.dev/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ usuario, senha })
+});
+
+            const data = await response.json();
+            if (response.ok) {
+                alert(data.message);
+                // Após cadastro, mudar para o formulário de login automaticamente:
+                toggleForms();
+            } else {
+                alert(data.message);
+            }
+        } catch (error) {
+            alert('Erro ao conectar ao servidor.');
+            console.error(error);
+        }
+    }
+
+        // Função para lidar com "Esqueci minha senha"
+        function handleForgotPassword(event) {
+            event.preventDefault();
+            alert('Funcionalidade de recuperação de senha será implementada.');
+            // Aqui você pode redirecionar para uma página de recuperação
+        }
+
+        // Função para limpar mensagens de validação
+        function clearValidationMessages() {
+            document.getElementById('passwordError').classList.remove('show');
+            document.getElementById('confirmError').classList.remove('show');
+        }
+
+        // Validação em tempo real para confirmação de senha
+        document.getElementById('confirmPassword')?.addEventListener('input', function() {
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = this.value;
+            const errorMsg = document.getElementById('confirmError');
+
+            if (confirmPassword && password !== confirmPassword) {
+                errorMsg.classList.add('show');
+            } else {
+                errorMsg.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
