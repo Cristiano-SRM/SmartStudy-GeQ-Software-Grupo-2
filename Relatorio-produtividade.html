@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios de Produtividade</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #F5F7FA;
+            padding: 32px 24px;
+            color: #1A1A1A;
+            
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .header-content h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #1A1A1A;
+        }
+
+        .header-content p {
+            font-size: 16px;
+            color: #666666;
+            font-weight: 400;
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .export-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .export-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .metric-card.time::before {
+            background: linear-gradient(90deg, #667EEA 0%, #E78FD4 100%);
+        }
+
+        .metric-card.sessions::before {
+            background: linear-gradient(90deg, #9B88FF 0%, #E78FD4 100%);
+        }
+
+        .metric-card.streak::before {
+            background: linear-gradient(90deg, #FF9A6C 0%, #FFD166 100%);
+        }
+
+        .metric-icon {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .time .metric-icon {
+            background: rgba(102, 126, 234, 0.15);
+            color: #667EEA;
+        }
+
+        .sessions .metric-icon {
+            background: rgba(155, 136, 255, 0.15);
+            color: #9B88FF;
+        }
+
+        .streak .metric-icon {
+            background: rgba(255, 179, 102, 0.15);
+            color: #FFB366;
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: #666666;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1A1A1A;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .chart-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1A1A1A;
+            margin-bottom: 24px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .pie-chart-container {
+            position: relative;
+            height: 350px;
+        }
+
+        .analysis-section {
+            margin-top: 32px;
+        }
+
+        .analysis-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1A1A1A;
+            margin-bottom: 8px;
+        }
+
+        .analysis-subtitle {
+            font-size: 14px;
+            color: #666666;
+            margin-bottom: 24px;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .analysis-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .analysis-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .analysis-card.strengths {
+            border-left-color: #5FE3A1;
+        }
+
+        .analysis-card.improvements {
+            border-left-color: #FFB366;
+        }
+
+        .analysis-card.strategies {
+            border-left-color: #6B8EFF;
+        }
+
+        .analysis-card.tips {
+            border-left-color: #9B88FF;
+        }
+
+        .analysis-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .analysis-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .strengths .analysis-icon {
+            background: rgba(95, 227, 161, 0.15);
+        }
+
+        .improvements .analysis-icon {
+            background: rgba(255, 179, 102, 0.15);
+        }
+
+        .strategies .analysis-icon {
+            background: rgba(107, 142, 255, 0.15);
+        }
+
+        .tips .analysis-icon {
+            background: rgba(155, 136, 255, 0.15);
+        }
+
+        .analysis-header-text h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1A1A1A;
+            margin-bottom: 2px;
+        }
+
+        .analysis-badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .badge-excellent {
+            background: rgba(95, 227, 161, 0.2);
+            color: #00B574;
+        }
+
+        .badge-attention {
+            background: rgba(255, 179, 102, 0.2);
+            color: #FF8C00;
+        }
+
+        .badge-action {
+            background: rgba(107, 142, 255, 0.2);
+            color: #667EEA;
+        }
+
+        .badge-tip {
+            background: rgba(155, 136, 255, 0.2);
+            color: #7C3AED;
+        }
+
+        .analysis-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .analysis-list li {
+            font-size: 14px;
+            color: #444;
+            line-height: 1.6;
+            padding: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .analysis-list li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .motivational-card {
+            background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            color: white;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .motivational-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .motivational-content h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .motivational-content p {
+            font-size: 14px;
+            line-height: 1.7;
+            opacity: 0.95;
+        }
+
+        .empty-state {
+            background: white;
+            border-radius: 16px;
+            padding: 60px 40px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1A1A1A;
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            font-size: 15px;
+            color: #666666;
+            line-height: 1.6;
+            max-width: 500px;
+            margin: 0 auto 20px;
+        }
+
+        .empty-state-tip {
+            background: #F5F7FA;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 24px;
+            font-size: 13px;
+            color: #666;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+
+            .export-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .motivational-card {
+                flex-direction: column;
+                text-align: center;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="mainContainer">
+        </div>
+
+    <script>
+
+       // Função para carregar dados do localStorage
+    function carregarDados() {
+        try {
+            const dados = localStorage.getItem('produtividadeData');
+            return dados ? JSON.parse(dados) : null;
+        } catch (e) {
+            console.error('Erro ao carregar dados:', e);
+            return null;
+        }
+    }
+
+    // Função para calcular métricas
+    function calcularMetricas(dados) {
+        if (!dados || !dados.sessoes || dados.sessoes.length === 0) {
+            return null;
+        }
+
+        const sessoes = dados.sessoes;
+        
+        const tempoTotal = sessoes.reduce((acc, s) => acc + s.tempo, 0);
+        const horas = Math.floor(tempoTotal / 60);
+        const minutos = tempoTotal % 60;
+        
+        const sessoesConcluidas = sessoes.filter(s => s.concluida).length;
+        
+        const datas = [...new Set(sessoes.map(s => s.data))].sort();
+        let sequencia = 0;
+        let dataAtual = new Date();
+        dataAtual.setHours(0, 0, 0, 0);
+        
+        for (let i = 0; i <= 365; i++) {
+            const dataVerificar = new Date(dataAtual);
+            dataVerificar.setDate(dataAtual.getDate() - i);
+            const dataStr = dataVerificar.toISOString().split('T')[0];
+            
+            if (datas.includes(dataStr)) {
+                sequencia++;
+            } else if (i > 0) {
+                break;
+            }
+        }
+        
+        return {
+            tempoTotal: `${horas}h ${minutos}min`,
+            sessoesConcluidas,
+            sequenciaDias: sequencia
+        };
+    }
+
+    // Função para calcular dados semanais
+    function calcularDadosSemanais(sessoes) {
+        const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        const temposPorDia = [0, 0, 0, 0, 0, 0, 0];
+        
+        sessoes.forEach(sessao => {
+            const data = new Date(sessao.data + 'T00:00:00');
+            const dia = data.getDay();
+            temposPorDia[dia] += sessao.tempo;
+        });
+        
+        return {
+            labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+            data: [temposPorDia[1], temposPorDia[2], temposPorDia[3], 
+                   temposPorDia[4], temposPorDia[5], temposPorDia[6], temposPorDia[0]]
+        };
+    }
+
+    // Função para calcular distribuição por matéria
+    function calcularDistribuicaoPorMateria(sessoes, materias) {
+        const tempoPorMateria = {};
+        
+        materias.forEach(materia => {
+            tempoPorMateria[materia] = 0;
+        });
+        
+        sessoes.forEach(sessao => {
+            if (tempoPorMateria.hasOwnProperty(sessao.materia)) {
+                tempoPorMateria[sessao.materia] += sessao.tempo;
+            }
+        });
+        
+        const total = Object.values(tempoPorMateria).reduce((a, b) => a + b, 0);
+        
+        return {
+            labels: Object.keys(tempoPorMateria),
+            data: Object.values(tempoPorMateria).map(t => Math.round((t / total) * 100))
+        };
+    }
+
+    // Função para gerar análises dinâmicas
+    function gerarAnalises(dados, metricas) {
+        const sessoes = dados.sessoes;
+        const dadosSemanais = calcularDadosSemanais(sessoes);
+        const distribuicao = calcularDistribuicaoPorMateria(sessoes, dados.materias);
+        
+        const maxTempo = Math.max(...dadosSemanais.data);
+        const melhorDia = dadosSemanais.labels[dadosSemanais.data.indexOf(maxTempo)];
+        
+        const maxIndice = distribuicao.data.indexOf(Math.max(...distribuicao.data));
+        const materiaPrincipal = distribuicao.labels[maxIndice];
+        
+        const minIndice = distribuicao.data.indexOf(Math.min(...distribuicao.data));
+        const materiaMenor = distribuicao.labels[minIndice];
+        
+        const tempoTotal = sessoes.reduce((acc, s) => acc + s.tempo, 0);
+        const diasComEstudo = [...new Set(sessoes.map(s => s.data))].length;
+        const mediaDiaria = Math.round(tempoTotal / diasComEstudo);
+        
+        return {
+            melhorDia,
+            materiaPrincipal,
+            materiaMenor,
+            maxTempo,
+            mediaDiaria,
+            tempoTotal,
+            porcentagemPrincipal: distribuicao.data[maxIndice]
+        };
+    }
+
+    // Função para renderizar página com dados
+    function renderizarComDados(dados) {
+        const metricas = calcularMetricas(dados);
+        const analises = gerarAnalises(dados, metricas);
+        const dadosSemanais = calcularDadosSemanais(dados.sessoes);
+        const distribuicao = calcularDistribuicaoPorMateria(dados.sessoes, dados.materias);
+        
+        const cores = ['#6B8EFF', '#9B88FF', '#5FE3A1', '#FF6B9D', '#FFB366', '#FF6B6B'];
+        
+        document.getElementById('mainContainer').innerHTML = `
+            <header>
+                <div class="header-content">
+                    <h1>Relatórios de Produtividade</h1>
+                    <p>Acompanhe seu desempenho e evolução</p>
+                </div>
+                <button class="export-btn" onclick="exportarRelatorio()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Exportar Relatório
+                </button>
+            </header>
+
+            <div class="metrics-grid">
+                <div class="metric-card time">
+                    <div class="metric-icon">🕐</div>
+                    <div class="metric-label">Tempo Total Estudado</div>
+                    <div class="metric-value">${metricas.tempoTotal}</div>
+                </div>
+
+                <div class="metric-card sessions">
+                    <div class="metric-icon">✓</div>
+                    <div class="metric-label">Sessões Concluídas</div>
+                    <div class="metric-value">${metricas.sessoesConcluidas}</div>
+                </div>
+
+                <div class="metric-card streak">
+                    <div class="metric-icon">🔥</div>
+                    <div class="metric-label">Sequência de Dias</div>
+                    <div class="metric-value">${metricas.sequenciaDias} dias</div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-title">Tempo de Estudo Semanal</div>
+                    <div class="chart-container">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-title">Distribuição por Matéria</div>
+                    <div class="pie-chart-container">
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <h2 class="analysis-title">Análise de Desempenho</h2>
+                <p class="analysis-subtitle">Insights sobre sua rotina de estudos</p>
+
+                <div class="analysis-grid">
+                    <div class="analysis-card strengths">
+                        <div class="analysis-header">
+                            <div class="analysis-icon">📈</div>
+                            <div class="analysis-header-text">
+                                <h3>Pontos Fortes</h3>
+                                <span class="analysis-badge badge-excellent">Excelente</span>
+                            </div>
+                        </div>
+                        <ul class="analysis-list">
+                            <li>Sequência impressionante de ${metricas.sequenciaDias} dias consecutivos</li>
+                            <li>Total de ${metricas.tempoTotal} demonstra comprometimento</li>
+                            <li>Distribuição entre ${dados.materias.length} matérias diferentes</li>
+                            <li>Pico de produtividade em ${analises.melhorDia} (${analises.maxTempo}min)</li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-card improvements">
+                        <div class="analysis-header">
+                            <div class="analysis-icon">⚠️</div>
+                            <div class="analysis-header-text">
+                                <h3>Áreas de Melhoria</h3>
+                                <span class="analysis-badge badge-attention">Atenção</span>
+                            </div>
+                        </div>
+                        <ul class="analysis-list">
+                            <li>${metricas.sessoesConcluidas === 0 ? '0 sessões concluídas - foque em completar ciclos' : `${metricas.sessoesConcluidas} sessões concluídas - pode aumentar mais`}</li>
+                            <li>${analises.materiaMenor} precisa de mais atenção (menor tempo dedicado)</li>
+                            <li>Busque manter consistência em todos os dias da semana</li>
+                            <li>Considere aumentar gradualmente o tempo de estudo</li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-card strategies">
+                        <div class="analysis-header">
+                            <div class="analysis-icon">🎯</div>
+                            <div class="analysis-header-text">
+                                <h3>Estratégias Recomendadas</h3>
+                                <span class="analysis-badge badge-action">Ação</span>
+                            </div>
+                        </div>
+                        <ul class="analysis-list">
+                            <li>Use a técnica Pomodoro (25min + 5min pausa)</li>
+                            <li>Estabeleça metas de sessões concluídas por dia</li>
+                            <li>Reserve mais tempo para ${analises.materiaMenor}</li>
+                            <li>Aproveite seu melhor dia (${analises.melhorDia}) para matérias difíceis</li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-card tips">
+                        <div class="analysis-header">
+                            <div class="analysis-icon">💡</div>
+                            <div class="analysis-header-text">
+                                <h3>Dicas de Produtividade</h3>
+                                <span class="analysis-badge badge-tip">Pro Tip</span>
+                            </div>
+                        </div>
+                        <ul class="analysis-list">
+                            <li>Sua média diária é ${analises.mediaDiaria}min - tente manter ou superar</li>
+                            <li>Alterne matérias para evitar fadiga mental</li>
+                            <li>Mantenha breaks regulares para melhor retenção</li>
+                            <li>Celebre pequenas conquistas diariamente</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="motivational-card">
+                    <div class="motivational-icon">📊</div>
+                    <div class="motivational-content">
+                        <h3>Relatório Motivacional</h3>
+                        <p>Parabéns pela sua dedicação! Manter ${metricas.sequenciaDias} dias de sequência é uma conquista significativa que demonstra disciplina e foco. Seu tempo total de ${metricas.tempoTotal} está excelente! ${metricas.sessoesConcluidas > 0 ? `Você já concluiu ${metricas.sessoesConcluidas} sessões, continue assim!` : 'Tente completar mais sessões para melhorar ainda mais.'} Sua matéria principal é ${analises.materiaPrincipal} com ${analises.porcentagemPrincipal}% do tempo, mas lembre-se de dar atenção a ${analises.materiaMenor} também. Continue assim - você está no caminho certo! 🎯</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Criar gráficos
+        criarGraficoBarras(dadosSemanais);
+        criarGraficoPizza(distribuicao, cores);
+    }
+
+    // Função para renderizar estado vazio
+    function renderizarEstadoVazio() {
+        document.getElementById('mainContainer').innerHTML = `
+            <header>
+                <div class="header-content">
+                    <h1>Relatórios de Produtividade</h1>
+                    <p>Acompanhe seu desempenho e evolução</p>
+                </div>
+                <button class="export-btn" disabled>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Exportar Relatório
+                </button>
+            </header>
+            <div class="empty-state">
+                <div class="empty-state-icon">📊</div>
+                <h3>Ainda não há dados salvos</h3>
+                <p>Comece a registrar suas sessões de estudo para visualizar estatísticas detalhadas, gráficos de progresso e receber análises personalizadas sobre seu desempenho acadêmico.</p>
+                <div class="empty-state-tip">
+                    <strong>💡 Dica para desenvolvedores:</strong><br>
+                    Esta página lê dados do localStorage com a chave 'produtividadeData'.<br>
+                    Veja o código fonte para a estrutura completa de dados esperada.
+                </div>
+            </div>
+        `;
+    }
+
+    // Função para criar gráfico de barras
+    function criarGraficoBarras(dadosSemanais) {
+        const ctx = document.getElementById('barChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dadosSemanais.labels,
+                datasets: [{
+                    data: dadosSemanais.data,
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) return null;
+                        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                        gradient.addColorStop(0, '#667EEA');
+                        gradient.addColorStop(1, '#A8B8FF');
+                        return gradient;
+                    },
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        borderRadius: 8,
+                        titleFont: {
+                            size: 13
+                        },
+                        bodyFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y + ' min';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#666666',
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: '#F0F0F0',
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#666666',
+                            font: {
+                                size: 13
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Função para criar gráfico de pizza
+    function criarGraficoPizza(distribuicao, cores) {
+        const ctx = document.getElementById('pieChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: distribuicao.labels,
+                datasets: [{
+                    data: distribuicao.data,
+                    backgroundColor: cores.slice(0, distribuicao.labels.length),
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 13,
+                                weight: '500'
+                            },
+                            color: '#666666',
+                            usePointStyle: true,
+                            pointStyle: 'rect'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        borderRadius: 8,
+                        titleFont: {
+                            size: 13
+                        },
+                        bodyFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.parsed + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Função que aciona a escolha de exportação (TXT ou PDF)
+    function exportarRelatorio() {
+        const escolha = prompt("Escolha o formato de exportação:\n1 - TXT (Resumo)\n2 - PDF (Visual)\n\n(Digite 1 ou 2)");
+
+        if (escolha === '1' || escolha.toLowerCase() === 'txt') {
+            exportarTXT();
+        } else if (escolha === '2' || escolha.toLowerCase() === 'pdf') {
+            exportarPDF();
+        } else if (escolha) {
+            alert("Opção inválida. Nenhuma exportação realizada.");
+        }
+    }
+
+    // Função de exportação para TXT
+    function exportarTXT() {
+        const dados = carregarDados();
+        if (!dados) return;
+        
+        const metricas = calcularMetricas(dados);
+        const analises = gerarAnalises(dados, metricas);
+        const dadosSemanais = calcularDadosSemanais(dados.sessoes);
+        const distribuicao = calcularDistribuicaoPorMateria(dados.sessoes, dados.materias);
+        
+        const dataAtual = new Date().toLocaleDateString('pt-BR');
+        const horaAtual = new Date().toLocaleTimeString('pt-BR');
+        
+        let conteudoSemanal = '';
+        dadosSemanais.labels.forEach((dia, i) => {
+            conteudoSemanal += `${dia}:${' '.repeat(15 - dia.length)}${dadosSemanais.data[i]} minutos\n`;
+        });
+        
+        let conteudoMaterias = '';
+        distribuicao.labels.forEach((materia, i) => {
+            conteudoMaterias += `• ${materia}:${' '.repeat(20 - materia.length)}${distribuicao.data[i]}%\n`;
+        });
+        
+        const conteudo = `
+RELATÓRIO DE PRODUTIVIDADE
+==================================
+Data de geração: ${dataAtual} às ${horaAtual}
+
+MÉTRICAS PRINCIPAIS
+----------------------------------
+• Tempo Total Estudado: ${metricas.tempoTotal}
+• Sessões Concluídas: ${metricas.sessoesConcluidas}
+• Sequência de Dias: ${metricas.sequenciaDias} dias
+
+TEMPO DE ESTUDO SEMANAL
+----------------------------------
+${conteudoSemanal}
+DISTRIBUIÇÃO POR MATÉRIA
+----------------------------------
+${conteudoMaterias}
+ANÁLISE E INSIGHTS
+----------------------------------
+✓ Melhor dia: ${analises.melhorDia} (${analises.maxTempo} minutos)
+✓ Matéria prioritária: ${analises.materiaPrincipal} (${analises.porcentagemPrincipal}%)
+✓ Matéria que precisa de atenção: ${analises.materiaMenor}
+✓ Total de minutos: ${analises.tempoTotal} minutos
+✓ Média diária: ${analises.mediaDiaria} minutos
+
+RECOMENDAÇÕES
+----------------------------------
+• Continue mantendo sua sequência de ${metricas.sequenciaDias} dias
+• Dedique mais tempo a ${analises.materiaMenor}
+• Aproveite ${analises.melhorDia} para matérias mais desafiadoras
+• Tente completar mais sessões Pomodoro
+
+----------------------------------
+Relatório gerado automaticamente
+© ${new Date().getFullYear()} Relatórios de Produtividade
+        `;
+
+        const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `relatorio-produtividade-${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }
+
+
+function exportarPDF() {
+    // 1. Encontra os elementos gráficos no documento ATUAL
+    const barChart = document.getElementById('barChart');
+    const pieChart = document.getElementById('pieChart');
+
+    // 2. Cria uma nova lista de elementos a serem temporariamente restaurados
+    const elementosRestaurar = [];
+
+    // Função auxiliar para converter Canvas em Imagem
+    function converterCanvasParaImg(canvas) {
+        if (!canvas) return;
+        try {
+            // 2.1 Converte o Canvas em Data URL (imagem PNG)
+            const imgData = canvas.toDataURL('image/png', 1.0);
+            
+            // 2.2 Cria um elemento <img> e define a fonte
+            const img = document.createElement('img');
+            img.src = imgData;
+            img.style.width = '100%'; 
+            img.style.height = 'auto';
+            
+            // 2.3 Substitui o Canvas pela Imagem no DOM ATUAL
+            canvas.parentNode.replaceChild(img, canvas);
+            
+            // 2.4 Registra a mudança para reverter depois
+            elementosRestaurar.push({ original: canvas, substituto: img });
+            
+        } catch (e) {
+            console.error("Erro ao converter canvas para imagem:", e);
+        }
+    }
+
+    // Converte os dois gráficos
+    converterCanvasParaImg(barChart);
+    converterCanvasParaImg(pieChart);
+    
+    // 3. Define as opções de exportação
+    const element = document.getElementById('mainContainer'); 
+    const dataAtual = new Date().toISOString().split('T')[0];
+    const nomeArquivo = `relatorio-produtividade-${dataAtual}.pdf`;
+    
+    const opt = {
+        margin: 10,
+        filename: nomeArquivo,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+            scale: 2,
+            logging: true, 
+            dpi: 192, 
+            letterRendering: true,
+            scrollY: 0,
+        },
+        jsPDF: { 
+            unit: 'mm', 
+            format: 'a4', 
+            orientation: 'portrait' 
+        }
+    };
+    
+    // 4. Gera e salva o PDF
+    html2pdf().set(opt).from(element).save().then(() => {
+        // 5. Reverte as mudanças no DOM após a geração do PDF (muito importante!)
+        elementosRestaurar.forEach(({ original, substituto }) => {
+            substituto.parentNode.replaceChild(original, substituto);
+        });
+        
+        alert("Relatório PDF gerado com sucesso!");
+    }).catch(error => {
+        console.error('Erro fatal ao gerar PDF:', error);
+        alert('Erro fatal ao gerar PDF. O problema é provavelmente com a captura do Canvas.');
+        
+        // Tenta reverter mesmo em caso de erro
+        elementosRestaurar.forEach(({ original, substituto }) => {
+            if (substituto.parentNode) {
+                substituto.parentNode.replaceChild(original, substituto);
+            }
+        });
+    });
+}
+
+    // Inicializar página
+    function inicializarPagina() {
+        const dados = carregarDados();
+        
+        if (dados && dados.sessoes && dados.sessoes.length > 0) {
+            renderizarComDados(dados);
+        } else {
+            renderizarEstadoVazio();
+        }
+    }
+
+    // Carregar página ao iniciar
+    inicializarPagina();
+
+    // Atualizar página quando houver mudanças no localStorage (opcional)
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'produtividadeData') {
+            inicializarPagina();
+        }
+    });
+    </script>
+</body>
+</html>
