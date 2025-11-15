@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SmartStudy — Suas Matérias</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="container">
+    <h1>Suas Matérias</h1>
+    <p class="subtitle">Organize e acompanhe seu progresso de estudos</p>
+  </header>
+
+  <main class="container">
+    <section class="card add-card">
+      <h2>Adicionar Nova Matéria</h2>
+      <form id="subject-form">
+        <label class="label" for="subjectName">Nome da Matéria</label>
+        <input id="subjectName" class="input" type="text" maxlength="40" placeholder="Ex: Matemática, História..." required />
+
+        <div class="colors">
+          <span class="label">Cor</span>
+          <div class="swatches" id="colorSwatches"></div>
+        </div>
+
+        <button class="btn" type="submit">+ Adicionar</button>
+      </form>
+    </section>
+
+    <section id="subjectsGrid" class="grid"></section>
+  </main>
+
+  <template id="subjectCardTpl">
+    <article class="card subject-card" data-id="">
+      <div class="accent"></div>
+      <div class="subject-head">
+        <div class="icon">📘</div>
+        <div class="title-wrap">
+          <h3 class="subject-name"></h3>
+          <small class="subject-meta"><span class="done">0</span> de <span class="total">0</span> conteúdos</small>
+        </div>
+        <button class="trash" title="Excluir">🗑️</button>
+      </div>
+
+      <div class="progress">
+        <div class="bar"><span></span></div>
+      </div>
+
+      <!-- registrar subconteúdo (texto) -->
+      <div class="actions">
+        <input class="input small sub-input" type="text" maxlength="60" placeholder="Registrar conteúdo (ex: Porcentagens)" />
+        <button class="btn ghost add-item" title="Adicionar">＋</button>
+      </div>
+
+      <!-- lista de subconteúdos -->
+      <ul class="items"></ul>
+
+      <div class="footer">
+        <span class="badge done-badge hidden">Concluída</span>
+        <span class="spacer"></span>
+        <button class="btn ghost uncheck-all" title="Desmarcar todas as submatérias">Desmarcar tudo</button>
+        <button class="btn ghost danger reset-subject" title="Resetar matéria (apagar submatérias)">Resetar</button>
+      </div>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
