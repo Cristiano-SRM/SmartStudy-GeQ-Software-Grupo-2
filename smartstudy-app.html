@@ -561,7 +561,7 @@
             </div>
         </nav>
         
-        <button class="logout-btn">🚪 Sair</button>
+        <button class="logout-btn"> Sair</button>
     </aside>
 
     <!-- ========== CONTEÚDO PRINCIPAL ========== -->
@@ -722,6 +722,11 @@
     </main>
 
     <script>
+        // Impedir acesso direto ao appshell sem login
+if (!localStorage.getItem("usuarioLogado")) {
+    window.location.href = "SmartStudy.html"; 
+}
+
         // ========== SISTEMA DE NAVEGAÇÃO (SPA) ==========
         function showView(viewId) {
             // Ocultar todas as views
@@ -991,6 +996,12 @@
         // ========== INICIALIZAÇÃO ==========
         // Página inicia sem matérias de exemplo
         renderSubjects();
+        
+        document.getElementById("logout-btn").addEventListener("click", () => {
+    localStorage.removeItem("usuarioLogado");
+    window.location.href = "SmartStudy.html";
+});
+
     </script>
 </body>
 </html>

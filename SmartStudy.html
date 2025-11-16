@@ -406,8 +406,13 @@
             const data = await response.json();
             if (response.ok) {
                 alert(data.message);
-                // redirecionar para a página principal se quiser:
-                // window.location.href = "paginaPrincipal.html";
+                // redirecionar para a página principal
+                // Salvar usuário logado no navegador
+               localStorage.setItem("usuarioLogado", usuario);
+
+                // Redirecionar para o appshell
+               window.location.href = "smartstudy-app.html";
+
             } else {
                 alert(data.message);
             }
