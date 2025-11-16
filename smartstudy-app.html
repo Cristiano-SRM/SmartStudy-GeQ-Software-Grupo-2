@@ -997,10 +997,17 @@ if (!localStorage.getItem("usuarioLogado")) {
         // Página inicia sem matérias de exemplo
         renderSubjects();
         
-        document.getElementById("logout-btn").addEventListener("click", () => {
-    localStorage.removeItem("usuarioLogado");
-    window.location.href = "SmartStudy.html";
+        document.addEventListener("DOMContentLoaded", () => {
+    const logoutBtn = document.getElementById("logout-btn");
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", () => {
+            localStorage.removeItem("usuarioLogado");
+            window.location.href = "SmartStudy.html";
+        });
+    }
 });
+
 
     </script>
 </body>
