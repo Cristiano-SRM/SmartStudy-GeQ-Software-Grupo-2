@@ -722,10 +722,13 @@
     </main>
 
     <script>
+        const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
         // Impedir acesso direto ao appshell sem login
 if (!localStorage.getItem("usuarioLogado")) {
     window.location.href = "SmartStudy.html"; 
 }
+console.log("ID do usuário logado:", usuarioLogado.id);
+console.log("Nome do usuário:", usuarioLogado.usuario);
 
         // ========== SISTEMA DE NAVEGAÇÃO (SPA) ==========
         function showView(viewId) {

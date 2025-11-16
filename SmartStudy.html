@@ -406,12 +406,15 @@
             const data = await response.json();
             if (response.ok) {
                 alert(data.message);
-                // redirecionar para a página principal
-                // Salvar usuário logado no navegador
-               localStorage.setItem("usuarioLogado", usuario);
+                
+                if (data.usuarioId) {
+    localStorage.setItem("usuarioLogado", JSON.stringify({
+        id: data.usuarioId,
+        usuario: data.usuario
+    }));
 
-                // Redirecionar para o appshell
-               window.location.href = "smartstudy-app.html";
+    window.location.href = "smartstudy-app.html";
+}
 
             } else {
                 alert(data.message);

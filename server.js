@@ -87,10 +87,17 @@ app.post('/login', (req, res) => {
         console.error('Erro ao verificar login:', err.message);
         return res.status(500).json({ message: 'Erro interno no servidor.' });
       }
+
       if (!row) {
         return res.status(401).json({ message: 'Usuário ou senha incorretos.' });
       }
-      res.json({ message: 'Login realizado com sucesso!' });
+
+      // Agora retornamos o ID e o nome do usuário
+      res.json({
+        message: 'Login realizado com sucesso!',
+        usuarioId: row.id,
+        usuario: row.usuario
+      });
     }
   );
 });
