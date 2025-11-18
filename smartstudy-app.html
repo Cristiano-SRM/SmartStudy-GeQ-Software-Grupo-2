@@ -1084,6 +1084,12 @@ async function carregarRelatorios() {
         document.getElementById("totalTempo").textContent = `${data.totalMinutos} min`;
         document.getElementById("totalSessoes").textContent = `${data.totalSessoes} sessões`;
 
+         // ---- STREAK ----
+        const respStreak = await fetch(`${API_URL}/streak/${usuario.id}`);
+        const dadosStreak = await respStreak.json();
+
+        document.getElementById("maiorStreak").textContent = `${dadosStreak.streak} dias`;
+
     } catch (err) {
         console.error("Erro ao carregar relatórios:", err);
     }
@@ -1093,6 +1099,55 @@ async function carregarRelatorios() {
 document.getElementById("btnRelatorios").addEventListener("click", () => {
     carregarRelatorios();
 });
+
+async function carregarGraficoSemanal() {
+    const usuario = getUsuarioLogado();
+    if (!usuario) return;
+
+    const resp = await fetch(`${API_URL}/estudos/semana/${usuario.id}`);
+    const dados = await resp.json(); // { "2025-11-18": 25, ... }
+
+    // dias da semana na ordem do seu gráfico
+    const labels = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
+    // pega as barras do HTML
+    const barras = document.querySelectorAll(".bar-chart .bar");
+
+    // converter datas → dias da semana
+    const mapaDias = {
+        1: "Seg",
+        2: "Ter",
+        3: "Qua",
+        4: "Qui",
+        5: "Sex",
+        6: "Sáb",
+        0: "Dom"
+    };
+
+    // transformar mapa de datas em minutos por dia da semana
+    const minutosPorDia = {
+        "Seg": 0, "Ter": 0, "Qua": 0,
+        "Qui": 0, "Sex": 0, "Sáb": 0, "Dom": 0
+    };
+
+    for (const [data, minutos] of Object.entries(dados)) {
+        const d = new Date(data);
+        const diaSemana = mapaDias[d.getDay()];
+        minutosPorDia[diaSemana] += minutos;
+    }
+
+    // descobrir maior valor para normalizar (100% = maior)
+    const max = Math.max(...Object.values(minutosPorDia)) || 1;
+
+    // atualizar cada barra
+    barras.forEach((bar, i) => {
+        const dia = labels[i];
+        const valor = minutosPorDia[dia];
+        const porcentagem = Math.round((valor / max) * 100);
+
+        bar.style.height = porcentagem + "%";
+    });
+}
 
     </script>
 </body>

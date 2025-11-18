@@ -169,7 +169,72 @@ app.get('/estudos/:usuarioId', (req, res) => {
     );
 });
 
+// Calcular streak (sequência de dias ativos)
+app.get("/streak/:usuarioId", (req, res) => {
+    const usuarioId = req.params.usuarioId;
 
+    db.all(
+        `SELECT DISTINCT data FROM estudos WHERE usuarioId = ? ORDER BY data DESC`,
+        [usuarioId],
+        (err, rows) => {
+            if (err) return res.status(500).json({ message: "Erro ao calcular streak." });
+
+            if (!rows || rows.length === 0) {
+                return res.json({ streak: 0 });
+            }
+
+            let streak = 1;
+            let prev = new Date(rows[0].data);
+
+            for (let i = 1; i < rows.length; i++) {
+                const current = new Date(rows[i].data);
+
+                const diffDays = Math.ceil((prev - current) / (1000 * 60 * 60 * 24));
+
+                if (diffDays === 1) {
+                    streak++;
+                    prev = current;
+                } else {
+                    break;
+                }
+            }
+
+            res.json({ streak });
+        }
+    );
+});
+
+// Tempo de estudo nos últimos 7 dias
+app.get("/estudos/semana/:usuarioId", (req, res) => {
+    const usuarioId = req.params.usuarioId;
+
+    db.all(
+        `SELECT data, minutos FROM estudos WHERE usuarioId = ?`,
+        [usuarioId],
+        (err, rows) => {
+            if (err) return res.status(500).json({ message: "Erro ao carregar dados semanais." });
+
+            const mapa = {};
+
+            // Inicia últimos 7 dias com zero
+            for (let i = 0; i < 7; i++) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const key = d.toISOString().split("T")[0];
+                mapa[key] = 0;
+            }
+
+            // Soma minutos
+            rows.forEach(r => {
+                if (mapa[r.data] !== undefined) {
+                    mapa[r.data] += r.minutos;
+                }
+            });
+
+            res.json(mapa);
+        }
+    );
+});
 
 
 // =======================
