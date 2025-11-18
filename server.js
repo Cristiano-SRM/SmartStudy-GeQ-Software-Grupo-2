@@ -40,6 +40,18 @@ db.run(`
   )
 `);
 
+// Tabela de sessões de estudo
+db.run(`
+  CREATE TABLE IF NOT EXISTS estudos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuarioId INTEGER NOT NULL,
+    minutos INTEGER NOT NULL,
+    data TEXT NOT NULL,
+    FOREIGN KEY(usuarioId) REFERENCES usuarios(id)
+  )
+`);
+
+
 // =======================
 // Rotas principais
 // =======================
@@ -101,6 +113,35 @@ app.post('/login', (req, res) => {
     }
   );
 });
+
+// Registrar sessão de estudo
+app.post('/estudos', (req, res) => {
+  console.log("📩 Requisição recebida em /estudos:", req.body);
+
+  const { usuarioId, minutos, data } = req.body;
+
+  if (!usuarioId || !minutos || !data) {
+    return res.status(400).json({ message: "Dados incompletos." });
+  }
+
+  const sql = `
+    INSERT INTO estudos (usuarioId, minutos, data)
+    VALUES (?, ?, ?)
+  `;
+
+  db.run(sql, [usuarioId, minutos, data], function(err) {
+    if (err) {
+      console.error("Erro ao registrar estudo:", err.message);
+      return res.status(500).json({ message: "Erro ao salvar sessão." });
+    }
+
+    res.json({
+      message: "Sessão registrada com sucesso!",
+      id: this.lastID
+    });
+  });
+});
+
 
 // =======================
 // Inicializar servidor
