@@ -748,78 +748,92 @@ console.log("Nome do usuário:", usuarioLogado.usuario);
         }
 
         // ========== POMODORO TIMER ==========
-        let timerInterval;
-        let timeLeft = 1500; // 25 minutos em segundos
-        let totalTime = 1500;
-        let isRunning = false;
+let timerInterval;
+let timeLeft = 1500; // 25 minutos em segundos
+let totalTime = 1500;
+let isRunning = false;
 
-        function updateTimerDisplay() {
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            document.getElementById('timerDisplay').textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
-            // Atualizar círculo de progresso
-            const progress = (timeLeft / totalTime) * 754;
-            document.getElementById('progressCircle').style.strokeDashoffset = 754 - progress;
-        }
+function updateTimerDisplay() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    document.getElementById('timerDisplay').textContent =
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
-        function startTimer() {
-            if (!isRunning) {
-                isRunning = true;
-                timerInterval = setInterval(() => {
-                    if (timeLeft > 0) {
-                        timeLeft--;
-                        updateTimerDisplay();
-                    } else {
-                        pauseTimer();
-                        alert('⏰ Tempo concluído! Faça uma pausa! 🎉');
-                    }
-                }, 1000);
-            }
-        }
+    // Atualizar círculo de progresso
+    const progress = (timeLeft / totalTime) * 754;
+    document.getElementById('progressCircle').style.strokeDashoffset = 754 - progress;
+}
 
-        function pauseTimer() {
-            isRunning = false;
-            clearInterval(timerInterval);
-        }
+function startTimer() {
+    if (!isRunning) {
+        isRunning = true;
+        timerInterval = setInterval(() => {
 
-        function resetTimer() {
-            pauseTimer();
-            timeLeft = totalTime;
-            updateTimerDisplay();
-        }
-
-        function setTimer(minutes) {
-            pauseTimer();
-            totalTime = minutes * 60;
-            timeLeft = totalTime;
-            updateTimerDisplay();
-        }
-
-        function openTimerConfig() {
-            document.getElementById('timerConfigModal').style.display = 'flex';
-            document.getElementById('customMinutes').value = Math.floor(totalTime / 60);
-        }
-
-        function closeTimerConfig() {
-            document.getElementById('timerConfigModal').style.display = 'none';
-        }
-
-        function applyCustomTimer() {
-            const minutes = parseInt(document.getElementById('customMinutes').value);
-            if (minutes > 0 && minutes <= 120) {
-                setTimer(minutes);
-                closeTimerConfig();
+            if (timeLeft > 0) {
+                timeLeft--;
+                updateTimerDisplay();
             } else {
-                alert('⚠️ Por favor, digite um valor entre 1 e 120 minutos!');
-            }
-        }
+                // ======= AQUI É O MOMENTO EM QUE O TEMPO ACABA =======
+                pauseTimer();
 
-        // Event listeners para botões do Pomodoro
-        document.getElementById('startBtn').addEventListener('click', startTimer);
-        document.getElementById('pauseBtn').addEventListener('click', pauseTimer);
-        document.getElementById('resetBtn').addEventListener('click', resetTimer);
+                const sessionMinutes = totalTime / 60; // minutos reais do ciclo (25, ou 15, ou custom)
+
+                alert('⏰ Tempo concluído! Faça uma pausa! 🎉');
+
+                // Enviar registro ao backend ✔
+                onPomodoroComplete(sessionMinutes);
+
+                // Opcional: resetar automaticamente
+                resetTimer();
+                // =======================================================
+
+            }
+        }, 1000);
+    }
+}
+
+function pauseTimer() {
+    isRunning = false;
+    clearInterval(timerInterval);
+}
+
+function resetTimer() {
+    pauseTimer();
+    timeLeft = totalTime;
+    updateTimerDisplay();
+}
+
+function setTimer(minutes) {
+    pauseTimer();
+    totalTime = minutes * 60;
+    timeLeft = totalTime;
+    updateTimerDisplay();
+}
+
+function openTimerConfig() {
+    document.getElementById('timerConfigModal').style.display = 'flex';
+    document.getElementById('customMinutes').value = Math.floor(totalTime / 60);
+}
+
+function closeTimerConfig() {
+    document.getElementById('timerConfigModal').style.display = 'none';
+}
+
+function applyCustomTimer() {
+    const minutes = parseInt(document.getElementById('customMinutes').value);
+    if (minutes > 0 && minutes <= 120) {
+        setTimer(minutes);
+        closeTimerConfig();
+    } else {
+        alert('⚠️ Por favor, digite um valor entre 1 e 120 minutos!');
+    }
+}
+
+// Event listeners para botões do Pomodoro
+document.getElementById('startBtn').addEventListener('click', startTimer);
+document.getElementById('pauseBtn').addEventListener('click', pauseTimer);
+document.getElementById('resetBtn').addEventListener('click', resetTimer);
+
 
         // ========== GESTÃO DE MATÉRIAS ==========
         let subjects = [];
@@ -1011,6 +1025,68 @@ console.log("Nome do usuário:", usuarioLogado.usuario);
     }
 });
 
+/***********************************************
+ *   FUNÇÕES PARA ENVIAR SESSÕES AO BACKEND
+ ***********************************************/
+
+const API_URL = "https://smartstudy-backend-fqd0.onrender.com";
+
+function getUsuarioLogado() {
+    const raw = localStorage.getItem("usuarioLogado");
+    return raw ? JSON.parse(raw) : null;
+}
+
+// Utilitário para evitar duplicações acidentais
+function _shouldSendSessionCheck(minutos, dataStr) {
+    const last = JSON.parse(localStorage.getItem('lastSentStudy') || 'null');
+    if (!last) return true;
+    return !(last.data === dataStr && last.minutos === minutos);
+}
+
+function _markSessionSent(minutos, dataStr) {
+    localStorage.setItem('lastSentStudy', JSON.stringify({ minutos, data: dataStr, at: new Date().toISOString() }));
+}
+
+// Função chamada quando o Pomodoro completa
+async function onPomodoroComplete(minutos) {
+    const usuario = getUsuarioLogado();
+    if (!usuario) {
+        console.warn("Usuário não logado — não enviando sessão.");
+        return;
+    }
+
+    const dataStr = new Date().toISOString().split("T")[0];
+
+    if (!_shouldSendSessionCheck(minutos, dataStr)) {
+        console.log("Sessão já enviada hoje — ignorando.");
+        return;
+    }
+
+    const payload = {
+        usuarioId: usuario.id,
+        minutos,
+        data: dataStr
+    };
+
+    try {
+        const resp = await fetch(`${API_URL}/estudos`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await resp.json();
+
+        if (resp.ok) {
+            console.log("Sessão registrada com sucesso:", data);
+            _markSessionSent(minutos, dataStr);
+        } else {
+            console.error("Erro ao registrar sessão:", data);
+        }
+    } catch (err) {
+        console.error("Falha ao enviar sessão:", err);
+    }
+}
 
     </script>
 </body>
