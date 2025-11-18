@@ -1036,17 +1036,6 @@ function getUsuarioLogado() {
     return raw ? JSON.parse(raw) : null;
 }
 
-// Utilitário para evitar duplicações acidentais
-function _shouldSendSessionCheck(minutos, dataStr) {
-    const last = JSON.parse(localStorage.getItem('lastSentStudy') || 'null');
-    if (!last) return true;
-    return !(last.data === dataStr && last.minutos === minutos);
-}
-
-function _markSessionSent(minutos, dataStr) {
-    localStorage.setItem('lastSentStudy', JSON.stringify({ minutos, data: dataStr, at: new Date().toISOString() }));
-}
-
 // Função chamada quando o Pomodoro completa
 async function onPomodoroComplete(minutos) {
     const usuario = getUsuarioLogado();
@@ -1056,11 +1045,6 @@ async function onPomodoroComplete(minutos) {
     }
 
     const dataStr = new Date().toISOString().split("T")[0];
-
-    if (!_shouldSendSessionCheck(minutos, dataStr)) {
-        console.log("Sessão já enviada hoje — ignorando.");
-        return;
-    }
 
     const payload = {
         usuarioId: usuario.id,
@@ -1079,7 +1063,6 @@ async function onPomodoroComplete(minutos) {
 
         if (resp.ok) {
             console.log("Sessão registrada com sucesso:", data);
-            _markSessionSent(minutos, dataStr);
         } else {
             console.error("Erro ao registrar sessão:", data);
         }
