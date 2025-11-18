@@ -143,6 +143,33 @@ app.post('/estudos', (req, res) => {
   });
 });
 
+// Obter dados de estudo do usuário
+app.get('/estudos/:usuarioId', (req, res) => {
+    const usuarioId = req.params.usuarioId;
+
+    db.all(
+        `SELECT minutos, data FROM estudos WHERE usuarioId = ?`,
+        [usuarioId],
+        (err, rows) => {
+            if (err) return res.status(500).json({ message: "Erro ao buscar estudos." });
+
+            let totalMinutos = 0;
+            let totalSessoes = rows.length;
+
+            rows.forEach(r => {
+                totalMinutos += r.minutos;
+            });
+
+            res.json({
+                totalMinutos,
+                totalSessoes,
+                registros: rows
+            });
+        }
+    );
+});
+
+
 
 
 // =======================

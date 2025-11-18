@@ -546,7 +546,8 @@
                 Matérias
             </div>
             
-            <div class="nav-item" onclick="showView('relatorios')">
+           <div id="btnRelatorios" class="nav-item" onclick="showView('relatorios')">
+
                 <svg fill="currentColor" viewBox="0 0 20 20">
                     <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
                 </svg>
@@ -669,17 +670,17 @@
             
             <div class="dashboard-grid">
                 <div class="stat-card">
-                    <div class="stat-value">18h 42m</div>
+                    <div class="stat-value" id="totalTempo">0 min</div>
                     <div class="stat-label">Tempo Total Estudado</div>
                 </div>
                 
                 <div class="stat-card">
-                    <div class="stat-value">47</div>
+                    <div class="stat-value" id="totalSessoes">0</div>
                     <div class="stat-label">Sessões Concluídas</div>
                 </div>
                 
                 <div class="stat-card">
-                    <div class="stat-value">12 dias</div>
+                    <div class="stat-value" id="MaiorStreak">0 dias</div>
                     <div class="stat-label">Maior Sequência</div>
                 </div>
             </div>
@@ -1070,6 +1071,28 @@ async function onPomodoroComplete(minutos) {
         console.error("Falha ao enviar sessão:", err);
     }
 }
+
+async function carregarRelatorios() {
+    const usuario = getUsuarioLogado();
+    if (!usuario) return;
+
+    try {
+        const resp = await fetch(`${API_URL}/estudos/${usuario.id}`);
+        const data = await resp.json();
+
+        // Preenchendo os indicadores
+        document.getElementById("totalTempo").textContent = `${data.totalMinutos} min`;
+        document.getElementById("totalSessoes").textContent = `${data.totalSessoes} sessões`;
+
+    } catch (err) {
+        console.error("Erro ao carregar relatórios:", err);
+    }
+}
+
+// Carregar relatórios quando clicar na aba RELATÓRIOS
+document.getElementById("btnRelatorios").addEventListener("click", () => {
+    carregarRelatorios();
+});
 
     </script>
 </body>
