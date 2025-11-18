@@ -781,7 +781,7 @@ function startTimer() {
                 alert('⏰ Tempo concluído! Faça uma pausa! 🎉');
 
                 // Enviar registro ao backend ✔
-                onPomodoroComplete(sessionMinutes);
+                onPomodoroComplete(Math.floor(totalTime / 60));
 
                 // Opcional: resetar automaticamente
                 resetTimer();
