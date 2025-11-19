@@ -1089,7 +1089,7 @@ async function carregarRelatorios() {
         const respStreak = await fetch(`${API_URL}/streak/${usuario.id}`);
         const dadosStreak = await respStreak.json();
 
-        document.getElementById("maiorStreak").textContent = `${dadosStreak.streak} dias`;
+        document.getElementById("MaiorStreak").textContent = `${dadosStreak.streak} dias`;
 
     } catch (err) {
         console.error("Erro ao carregar relatórios:", err);
@@ -1099,6 +1099,8 @@ async function carregarRelatorios() {
 // Carregar relatórios quando clicar na aba RELATÓRIOS
 document.getElementById("btnRelatorios").addEventListener("click", () => {
     carregarRelatorios();
+carregarGraficoSemanal();
+
 });
 
 async function carregarGraficoSemanal() {
@@ -1132,8 +1134,10 @@ async function carregarGraficoSemanal() {
     };
 
     for (const [data, minutos] of Object.entries(dados)) {
-        const d = new Date(data);
-        const diaSemana = mapaDias[d.getDay()];
+        const partes = data.split("-");
+        const d = new Date(Date.UTC(partes[0], partes[1] - 1, partes[2]));
+
+        const diaSemana = mapaDias[d.getUTCDay()];
         minutosPorDia[diaSemana] += minutos;
     }
 
