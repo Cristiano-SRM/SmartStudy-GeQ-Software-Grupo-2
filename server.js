@@ -222,6 +222,16 @@ app.get("/estudos/semana/:usuarioId", (req, res) => {
                 d.setDate(d.getDate() - i);
                 const key = d.toISOString().split("T")[0];
                 mapa[key] = 0;
+                barras.forEach((bar, i) => {
+    const dia = labels[i];
+    const valor = minutosPorDia[dia];
+    const porcentagem = Math.round((valor / max) * 100);
+
+    console.log(`Atualizando ${dia}: ${valor} min → ${porcentagem}%`);
+
+    bar.style.height = porcentagem + "%";
+});
+
             }
 
             // Soma minutos
