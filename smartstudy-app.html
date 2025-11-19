@@ -1099,7 +1099,7 @@ async function carregarRelatorios() {
 // Carregar relatórios quando clicar na aba RELATÓRIOS
 document.getElementById("btnRelatorios").addEventListener("click", () => {
     carregarRelatorios();
-carregarGraficoSemanal();
+    carregarGraficoSemanal();
 
 });
 
@@ -1110,13 +1110,9 @@ async function carregarGraficoSemanal() {
     const resp = await fetch(`${API_URL}/estudos/semana/${usuario.id}`);
     const dados = await resp.json(); // { "2025-11-18": 25, ... }
 
-    // dias da semana na ordem do seu gráfico
     const labels = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-
-    // pega as barras do HTML
     const barras = document.querySelectorAll(".bar-chart .bar");
 
-    // converter datas → dias da semana
     const mapaDias = {
         1: "Seg",
         2: "Ter",
@@ -1127,7 +1123,6 @@ async function carregarGraficoSemanal() {
         0: "Dom"
     };
 
-    // transformar mapa de datas em minutos por dia da semana
     const minutosPorDia = {
         "Seg": 0, "Ter": 0, "Qua": 0,
         "Qui": 0, "Sex": 0, "Sáb": 0, "Dom": 0
@@ -1141,18 +1136,18 @@ async function carregarGraficoSemanal() {
         minutosPorDia[diaSemana] += minutos;
     }
 
-    // descobrir maior valor para normalizar (100% = maior)
     const max = Math.max(...Object.values(minutosPorDia)) || 1;
 
-    // atualizar cada barra
     barras.forEach((bar, i) => {
         const dia = labels[i];
         const valor = minutosPorDia[dia];
+
         const porcentagem = Math.round((valor / max) * 100);
 
         bar.style.height = porcentagem + "%";
     });
 }
+
 
     </script>
 </body>
