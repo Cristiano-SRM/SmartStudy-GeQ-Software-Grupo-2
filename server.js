@@ -205,7 +205,7 @@ app.get("/streak/:usuarioId", (req, res) => {
 });
 
 // Tempo de estudo nos últimos 7 dias
-app.get("/estudos/semana/:usuarioId", (req, res) => {
+app.get('/estudos/semana/:usuarioId', (req, res) => {
     const usuarioId = req.params.usuarioId;
 
     db.all(
@@ -216,25 +216,16 @@ app.get("/estudos/semana/:usuarioId", (req, res) => {
 
             const mapa = {};
 
-            // Inicia últimos 7 dias com zero
+            // Criar últimos 7 dias com valor 0
             for (let i = 0; i < 7; i++) {
                 const d = new Date();
                 d.setDate(d.getDate() - i);
+
                 const key = d.toISOString().split("T")[0];
                 mapa[key] = 0;
-                barras.forEach((bar, i) => {
-    const dia = labels[i];
-    const valor = minutosPorDia[dia];
-    const porcentagem = Math.round((valor / max) * 100);
-
-    console.log(`Atualizando ${dia}: ${valor} min → ${porcentagem}%`);
-
-    bar.style.height = porcentagem + "%";
-});
-
             }
 
-            // Soma minutos
+            // Somar minutos de cada dia retornado do banco
             rows.forEach(r => {
                 if (mapa[r.data] !== undefined) {
                     mapa[r.data] += r.minutos;
@@ -245,6 +236,7 @@ app.get("/estudos/semana/:usuarioId", (req, res) => {
         }
     );
 });
+
 
 
 // =======================
