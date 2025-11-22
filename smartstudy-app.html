@@ -759,7 +759,15 @@ console.log("Nome do usuário:", usuarioLogado.usuario);
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
             });
-            event.target.closest('.nav-item').classList.add('active');
+            const item = event.target.closest('.nav-item');
+if (item) item.classList.add('active');
+
+// Se a view selecionada for RELATÓRIOS → carregar dados
+if (viewId === "relatorios") {
+    carregarRelatorios();
+    setTimeout(() => carregarGraficoSemanal(), 50);
+}
+
         }
 
         // ========== POMODORO TIMER ==========
@@ -1108,13 +1116,6 @@ async function carregarRelatorios() {
         console.error("Erro ao carregar relatórios:", err);
     }
 }
-
-// Carregar relatórios quando clicar na aba RELATÓRIOS
-document.getElementById("btnRelatorios").addEventListener("click", () => {
-    carregarRelatorios();
-    carregarGraficoSemanal();
-
-});
 
 async function carregarGraficoSemanal() {
     const usuario = getUsuarioLogado();
