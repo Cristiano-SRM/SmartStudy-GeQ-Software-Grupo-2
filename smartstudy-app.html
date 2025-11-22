@@ -525,6 +525,10 @@
             box-shadow: 0 6px 16px rgba(91, 141, 239, 0.4);
         }
     </style>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 </head>
 <body>
     <!-- ========== MENU LATERAL ========== -->
@@ -665,42 +669,51 @@
         </div>
 
         <!-- VIEW: RELATÓRIOS -->
-        <div id="relatorios" class="view">
-            <h1 class="page-title">📊 Relatórios de Produtividade</h1>
-            
-            <div class="dashboard-grid">
-                <div class="stat-card">
-                    <div class="stat-value" id="totalTempo">0 min</div>
-                    <div class="stat-label">Tempo Total Estudado</div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-value" id="totalSessoes">0</div>
-                    <div class="stat-label">Sessões Concluídas</div>
-                </div>
-                
-                <div class="stat-card">
-                    <div class="stat-value" id="MaiorStreak">0 dias</div>
-                    <div class="stat-label">Maior Sequência</div>
-                </div>
-            </div>
-            
-            <div class="chart-container">
-                <div class="chart-title">📈 Tempo de Estudo por Dia (Última Semana)</div>
-                <div class="bar-chart">
-<div class="bar" style="height: 0%"><span class="bar-label">Seg</span></div>
-<div class="bar" style="height: 0%"><span class="bar-label">Ter</span></div>
-<div class="bar" style="height: 0%"><span class="bar-label">Qua</span></div>
-<div class="bar" style="height: 0%"><span class="bar-label">Qui</span></div>
-<div class="bar" style="height: 0%"><span class="bar-label">Sex</span></div>
-<div class="bar" style="height: 0%"><span class="bar-label">Sáb</span></div>
-<div class="bar" style="height: 0%"><span class="bar-label">Dom</span></div>
+<div id="relatorios" class="view">
 
-                </div>
+    <!-- COMEÇA A ÁREA QUE SERÁ CAPTURADA NO PDF -->
+    <div id="report-area">
+
+        <h1 class="page-title">📊 Relatórios de Produtividade</h1>
+
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalTempo">0 min</div>
+                <div class="stat-label">Tempo Total Estudado</div>
             </div>
-            
-            <button class="btn btn-primary">📥 Exportar Relatório</button>
+
+            <div class="stat-card">
+                <div class="stat-value" id="totalSessoes">0</div>
+                <div class="stat-label">Sessões Concluídas</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-value" id="MaiorStreak">0 dias</div>
+                <div class="stat-label">Maior Sequência</div>
+            </div>
         </div>
+
+        <div class="chart-container">
+            <div class="chart-title">📈 Tempo de Estudo por Dia (Última Semana)</div>
+            <div class="bar-chart">
+
+                <div class="bar" style="height: 0%"><span class="bar-label">Seg</span></div>
+                <div class="bar" style="height: 0%"><span class="bar-label">Ter</span></div>
+                <div class="bar" style="height: 0%"><span class="bar-label">Qua</span></div>
+                <div class="bar" style="height: 0%"><span class="bar-label">Qui</span></div>
+                <div class="bar" style="height: 0%"><span class="bar-label">Sex</span></div>
+                <div class="bar" style="height: 0%"><span class="bar-label">Sáb</span></div>
+                <div class="bar" style="height: 0%"><span class="bar-label">Dom</span></div>
+
+            </div>
+        </div>
+
+    </div>
+    <!-- FIM DA ÁREA QUE SERÁ CAPTURADA NO PDF -->
+
+    <button class="btn btn-primary" onclick="exportarRelatorio()">📥 Exportar Relatório</button>
+</div>
+
 
         <!-- VIEW: RESUMO IA -->
         <div id="resumo" class="view">
@@ -1148,6 +1161,36 @@ async function carregarGraficoSemanal() {
     });
 }
 
+async function exportarRelatorio() {
+    const { jsPDF } = window.jspdf;
+
+    const area = document.getElementById("report-area");
+    if (!area) {
+        alert("Área de relatório não encontrada.");
+        return;
+    }
+
+    // Captura a área como imagem
+    const canvas = await html2canvas(area, {
+        scale: 2, // mais qualidade
+        backgroundColor: "#ffffff"
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: "a4"
+    });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const imgWidth = pageWidth - 20;
+    const ratio = canvas.height / canvas.width;
+    const imgHeight = imgWidth * ratio;
+
+    pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
+    pdf.save("Relatorio_SmartStudy.pdf");
+}
 
     </script>
 </body>
