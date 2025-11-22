@@ -215,10 +215,11 @@ app.get('/estudos/semana/:usuarioId', async (req, res) => {
 
     // soma minutos
     raw.forEach(r => {
-      if (mapa[r.data] !== undefined) {
-        mapa[r.data] += r.minutos;
-      }
-    });
+    const dataFormatada = r.data.split("T")[0];   // <- NORMALIZA!
+    if (mapa[dataFormatada] !== undefined) {
+        mapa[dataFormatada] += r.minutos;
+    }
+});
 
     res.json(mapa);
 
