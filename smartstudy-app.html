@@ -963,20 +963,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
         function registerContent(id) {
     const subject = subjects.find(s => s.id === id);
-    if (subject && !subject.concluida) {
 
-        currentSubjectId = id;
+    if (!subject) return;
 
-        document.getElementById('contentModalLabel').textContent =
-            `Conteúdo de ${subject.nome}`;
-
-        document.getElementById('contentText').value = subject.conteudo || '';
-
-        const modal = document.getElementById('contentModal');
-        modal.style.display = 'flex';
-        setTimeout(() => modal.classList.add('active'), 10);
+    if (subject.concluida) {
+        alert("Esta matéria já foi concluída.");
+        return;
     }
+
+    currentSubjectId = id;
+
+    document.getElementById('contentModalLabel').textContent =
+        `Conteúdo de ${subject.nome}`;
+
+    document.getElementById('contentText').value = subject.conteudo || '';
+
+    const modal = document.getElementById('contentModal');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('active'), 10);
 }
+
 
 
         function closeContentModal() {
@@ -1025,13 +1031,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
         function deleteSubject(id) {
     const subject = subjects.find(s => s.id === id);
-    if (subject) {
-        subjectToDelete = id;
-        document.getElementById('deleteModalText').textContent = 
-            `Tem certeza que deseja excluir a matéria "${subject.nome}"?`;
-        document.getElementById('deleteModal').style.display = 'flex';
-    }
+
+    if (!subject) return;
+
+    subjectToDelete = id;
+
+    document.getElementById('deleteModalText').textContent =
+        `Tem certeza que deseja excluir a matéria "${subject.nome}"?`;
+
+    const modal = document.getElementById('deleteModal');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('active'), 10);
 }
+
 
 
         function closeDeleteModal() {
