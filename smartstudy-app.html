@@ -914,44 +914,52 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         function renderSubjects() {
-            const container = document.getElementById('subjectsList');
-            container.innerHTML = '';
-            
-            if (subjects.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: var(--cinza-escuro); padding: 40px;">Nenhuma matéria cadastrada ainda. Adicione sua primeira matéria acima! 📚</p>';
-                return;
-            }
-            
-            subjects.forEach(subject => {
-                const card = document.createElement('div');
-                card.className = 'subject-card' + (subject.completed ? ' completed' : '');
-                card.style.borderLeftColor = subject.color;
-                
-                let contentHTML = '';
-                if (subject.content) {
-                    contentHTML = `<div class="subject-content">${subject.content}</div>`;
-                }
-                
-                const disabledAttr = subject.completed ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
-                
-                card.innerHTML = `
-                    <div class="subject-name">${subject.name}</div>
-                    ${contentHTML}
-                    <div class="subject-actions">
-                        <button class="btn btn-primary btn-small" onclick="registerContent(${subject.id})" ${disabledAttr}>
-                            📝 Registrar Conteúdo
-                        </button>
-                        <button class="btn btn-secondary btn-small" onclick="completeSubject(${subject.id})" ${disabledAttr}>
-                            ✅ Concluir
-                        </button>
-                        <button class="btn-delete" onclick="event.stopPropagation(); deleteSubject(${subject.id})">
-                            🗑️
-                        </button>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
+    const container = document.getElementById('subjectsList');
+    container.innerHTML = '';
+    
+    if (subjects.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--cinza-escuro); padding: 40px;">Nenhuma matéria cadastrada ainda. Adicione sua primeira matéria acima! 📚</p>';
+        return;
+    }
+    
+    subjects.forEach(subject => {
+        const card = document.createElement('div');
+
+        // agora usando o campo 'concluida' vindo do banco
+        card.className = 'subject-card' + (subject.concluida ? ' completed' : '');
+
+        // cor vindo do campo 'cor' do banco
+        card.style.borderLeftColor = subject.cor || '#5B8DEF';
+        
+        let contentHTML = '';
+        // conteúdo salvo no campo 'conteudo'
+        if (subject.conteudo) {
+            contentHTML = `<div class="subject-content">${subject.conteudo}</div>`;
         }
+        
+        const disabledAttr = subject.concluida 
+            ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' 
+            : '';
+        
+        card.innerHTML = `
+            <div class="subject-name">${subject.nome}</div>
+            ${contentHTML}
+            <div class="subject-actions">
+                <button class="btn btn-primary btn-small" onclick="registerContent(${subject.id})" ${disabledAttr}>
+                    📝 Registrar Conteúdo
+                </button>
+                <button class="btn btn-secondary btn-small" onclick="completeSubject(${subject.id})" ${disabledAttr}>
+                    ✅ Concluir
+                </button>
+                <button class="btn-delete" onclick="event.stopPropagation(); deleteSubject(${subject.id})">
+                    🗑️
+                </button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
 
         function registerContent(id) {
             const subject = subjects.find(s => s.id === id);
@@ -971,13 +979,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         async function saveContent() {
     if (currentSubjectId) {
-        const conteudo = document.getElementById('contentText').value.trim();
+        // saveContent
+const conteudo = document.getElementById('contentText').value.trim();
+await fetch(`${API_URL}/materias/${currentSubjectId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ conteudo })
+});
 
-        const resp = await fetch(`${API_URL}/materias/${currentSubjectId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ conteudo })
-        });
 
         const updated = await resp.json();
 
@@ -991,10 +1000,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         async function completeSubject(id) {
     const resp = await fetch(`${API_URL}/materias/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ concluida: true })
-    });
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ concluida: true })
+});
 
     const updated = await resp.json();
 
