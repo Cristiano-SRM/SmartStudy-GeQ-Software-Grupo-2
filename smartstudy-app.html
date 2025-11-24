@@ -863,30 +863,55 @@ document.getElementById('resetBtn').addEventListener('click', resetTimer);
         let currentSubjectId = null;
         let subjectToDelete = null;
 
-        function addSubject() {
-            const name = document.getElementById('subjectName').value;
-            const color = document.getElementById('subjectColor').value;
-            
-            if (name.trim() === '') {
-                alert('⚠️ Por favor, digite o nome da matéria!');
-                return;
-            }
-            
-            const subject = {
-                id: Date.now(),
-                name: name,
-                color: color,
-                content: '',
-                completed: false
-            };
-            
-            subjects.push(subject);
-            renderSubjects();
-            
-            // Limpar campos
-            document.getElementById('subjectName').value = '';
-            document.getElementById('subjectColor').value = '#5B8DEF';
-        }
+        async function carregarMaterias() {
+    const usuario = getUsuarioLogado();
+    if (!usuario) return;
+
+    const resp = await fetch(`${API_URL}/materias/${usuario.id}`);
+    const data = await resp.json();
+
+    subjects = data; 
+    renderSubjects();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    carregarMaterias();
+    // ... resto já existente
+});
+
+
+        async function addSubject() {
+    const name = document.getElementById('subjectName').value;
+    const color = document.getElementById('subjectColor').value;
+    const usuario = getUsuarioLogado();
+
+    if (name.trim() === '') {
+        alert('⚠️ Por favor, digite o nome da matéria!');
+        return;
+    }
+
+    const payload = {
+        usuarioId: usuario.id,
+        nome: name,
+        cor: color
+    };
+
+    const resp = await fetch(`${API_URL}/materias`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+
+    const novaMateria = await resp.json();
+
+    subjects.push(novaMateria);
+
+    renderSubjects();
+
+    document.getElementById('subjectName').value = '';
+    document.getElementById('subjectColor').value = '#5B8DEF';
+}
+
 
         function renderSubjects() {
             const container = document.getElementById('subjectsList');
@@ -944,25 +969,39 @@ document.getElementById('resetBtn').addEventListener('click', resetTimer);
             currentSubjectId = null;
         }
 
-        function saveContent() {
-            if (currentSubjectId) {
-                const content = document.getElementById('contentText').value.trim();
-                const subject = subjects.find(s => s.id === currentSubjectId);
-                if (subject) {
-                    subject.content = content;
-                    renderSubjects();
-                    closeContentModal();
-                }
-            }
-        }
+        async function saveContent() {
+    if (currentSubjectId) {
+        const conteudo = document.getElementById('contentText').value.trim();
 
-        function completeSubject(id) {
-            const subject = subjects.find(s => s.id === id);
-            if (subject && !subject.completed) {
-                subject.completed = true;
-                renderSubjects();
-            }
-        }
+        const resp = await fetch(`${API_URL}/materias/${currentSubjectId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ conteudo })
+        });
+
+        const updated = await resp.json();
+
+        subjects = subjects.map(s => (s.id === updated.id ? updated : s));
+
+        renderSubjects();
+        closeContentModal();
+    }
+}
+
+
+        async function completeSubject(id) {
+    const resp = await fetch(`${API_URL}/materias/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ concluida: true })
+    });
+
+    const updated = await resp.json();
+
+    subjects = subjects.map(s => (s.id === updated.id ? updated : s));
+    renderSubjects();
+}
+
 
         function deleteSubject(id) {
             const subject = subjects.find(s => s.id === id);
@@ -979,13 +1018,18 @@ document.getElementById('resetBtn').addEventListener('click', resetTimer);
             subjectToDelete = null;
         }
 
-        function confirmDelete() {
-            if (subjectToDelete !== null) {
-                subjects = subjects.filter(s => s.id !== subjectToDelete);
-                renderSubjects();
-                closeDeleteModal();
-            }
-        }
+        async function confirmDelete() {
+    if (subjectToDelete !== null) {
+        await fetch(`${API_URL}/materias/${subjectToDelete}`, {
+            method: "DELETE"
+        });
+
+        subjects = subjects.filter(s => s.id !== subjectToDelete);
+        renderSubjects();
+        closeDeleteModal();
+    }
+}
+
 
         // ========== CHAT IA ==========
         function sendMessage() {

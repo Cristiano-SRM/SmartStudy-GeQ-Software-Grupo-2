@@ -229,6 +229,91 @@ app.get('/estudos/semana/:usuarioId', async (req, res) => {
   }
 });
 
+// criar matéria
+app.post('/materias', async (req, res) => {
+  const { usuarioId, nome, cor } = req.body;
+
+  if (!usuarioId || !nome || !cor) {
+    return res.status(400).json({ message: "Dados incompletos." });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO materias (usuarioId, nome, cor)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [usuarioId, nome, cor]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Erro ao criar matéria:", err);
+    res.status(500).json({ message: "Erro ao criar matéria." });
+  }
+});
+
+//listar matérias do usuário
+
+app.get('/materias/:usuarioId', async (req, res) => {
+  const usuarioId = req.params.usuarioId;
+
+  try {
+    const result = await pool.query(
+      `SELECT * FROM materias
+       WHERE usuarioId = $1
+       ORDER BY criado_em DESC`,
+      [usuarioId]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Erro ao buscar matérias:", err);
+    res.status(500).json({ message: "Erro ao buscar matérias." });
+  }
+});
+
+// atualizar matéria
+
+app.put('/materias/:id', async (req, res) => {
+  const id = req.params.id;
+  const { nome, cor, conteudo, concluida } = req.body;
+
+  try {
+    const result = await pool.query(
+      `UPDATE materias
+       SET nome = COALESCE($1, nome),
+           cor = COALESCE($2, cor),
+           conteudo = COALESCE($3, conteudo),
+           concluida = COALESCE($4, concluida),
+           atualizado_em = NOW()
+       WHERE id = $5
+       RETURNING *`,
+      [nome, cor, conteudo, concluida, id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Erro ao atualizar matéria:", err);
+    res.status(500).json({ message: "Erro ao atualizar matéria." });
+  }
+});
+
+// excluir matéria
+
+app.delete('/materias/:id', async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    await pool.query("DELETE FROM materias WHERE id = $1", [id]);
+    res.json({ message: "Matéria excluída." });
+  } catch (err) {
+    console.error("Erro ao excluir matéria:", err);
+    res.status(500).json({ message: "Erro ao excluir matéria." });
+  }
+});
+
+
+
 // =======================
 // Inicializar servidor
 // =======================
