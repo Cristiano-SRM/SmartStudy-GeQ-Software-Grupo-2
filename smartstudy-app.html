@@ -858,23 +858,47 @@ document.getElementById('pauseBtn').addEventListener('click', pauseTimer);
 document.getElementById('resetBtn').addEventListener('click', resetTimer);
 
 
-        // ========== GESTÃO DE MATÉRIAS (VERSÃO CORRIGIDA) ==========
+        // ========== GESTÃO DE MATÉRIAS (VERSÃO COMPLETA CORRIGIDA) ==========
 
 let subjects = [];
 let currentSubjectId = null;
 let subjectToDelete = null;
 
+// Função helper para debug
+function logSubjects() {
+    console.log("📚 Array subjects atual:", subjects);
+    console.log("📊 Total de matérias:", subjects.length);
+}
+
 async function carregarMaterias() {
     const usuario = getUsuarioLogado();
-    if (!usuario) return;
+    if (!usuario) {
+        console.warn("❌ Usuário não logado");
+        return;
+    }
 
     try {
+        console.log("🔄 Carregando matérias do usuário:", usuario.id);
+        
         const resp = await fetch(`${API_URL}/materias/${usuario.id}`);
+        
+        if (!resp.ok) {
+            throw new Error(`HTTP error! status: ${resp.status}`);
+        }
+        
         const data = await resp.json();
+        
+        // CRÍTICO: Atualizar o array global
         subjects = data;
+        
+        console.log("✅ Matérias carregadas com sucesso:");
+        logSubjects();
+        
         renderSubjects();
+        
     } catch (err) {
-        console.error("Erro ao carregar matérias:", err);
+        console.error("❌ Erro ao carregar matérias:", err);
+        alert("Erro ao carregar matérias. Verifique sua conexão.");
     }
 }
 
@@ -883,46 +907,74 @@ async function addSubject() {
     const color = document.getElementById('subjectColor').value;
     const usuario = getUsuarioLogado();
 
-    if (name.trim() === '') {
+    if (!name || name.trim() === '') {
         alert('⚠️ Por favor, digite o nome da matéria!');
         return;
     }
 
     const payload = {
         usuarioId: usuario.id,
-        nome: name,
+        nome: name.trim(),
         cor: color
     };
 
     try {
+        console.log("📤 Enviando nova matéria:", payload);
+        
         const resp = await fetch(`${API_URL}/materias`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
 
+        if (!resp.ok) {
+            throw new Error(`HTTP error! status: ${resp.status}`);
+        }
+
         const novaMateria = await resp.json();
+        
+        console.log("✅ Matéria criada:", novaMateria);
+        
+        // Adicionar ao array global
         subjects.push(novaMateria);
+        
+        logSubjects();
         renderSubjects();
 
+        // Limpar formulário
         document.getElementById('subjectName').value = '';
         document.getElementById('subjectColor').value = '#5B8DEF';
+        
     } catch (err) {
-        console.error("Erro ao adicionar matéria:", err);
+        console.error("❌ Erro ao adicionar matéria:", err);
         alert("Erro ao adicionar matéria. Tente novamente.");
     }
 }
 
 function renderSubjects() {
-    const container = document.getElementById('subjectsList');
-    container.innerHTML = '';
+    console.log("🎨 Renderizando", subjects.length, "matérias");
     
-    if (subjects.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: var(--cinza-escuro); padding: 40px;">Nenhuma matéria cadastrada ainda. Adicione sua primeira matéria acima! 📚</p>';
+    const container = document.getElementById('subjectsList');
+    
+    if (!container) {
+        console.error("❌ Container #subjectsList não encontrado!");
         return;
     }
     
-    subjects.forEach(subject => {
+    container.innerHTML = '';
+    
+    if (subjects.length === 0) {
+        container.innerHTML = `
+            <p style="text-align: center; color: var(--cinza-escuro); padding: 40px;">
+                Nenhuma matéria cadastrada ainda. Adicione sua primeira matéria acima! 📚
+            </p>
+        `;
+        return;
+    }
+    
+    subjects.forEach((subject, index) => {
+        console.log(`  📝 Renderizando matéria ${index + 1}:`, subject);
+        
         const card = document.createElement('div');
         card.className = 'subject-card' + (subject.concluida ? ' completed' : '');
         card.style.borderLeftColor = subject.cor || '#5B8DEF';
@@ -967,29 +1019,53 @@ function renderSubjects() {
         container.appendChild(card);
     });
     
-    // Adicionar event listeners APÓS renderizar
+    // IMPORTANTE: Anexar event listeners APÓS renderizar todos os cards
     attachSubjectEventListeners();
 }
 
 function attachSubjectEventListeners() {
     const buttons = document.querySelectorAll('#subjectsList button[data-action]');
     
+    console.log(`🔗 Anexando event listeners a ${buttons.length} botões`);
+    
     buttons.forEach(button => {
-        button.addEventListener('click', function(e) {
+        // Remover listeners antigos (se existirem)
+        button.replaceWith(button.cloneNode(true));
+    });
+    
+    // Re-selecionar após clonar
+    const newButtons = document.querySelectorAll('#subjectsList button[data-action]');
+    
+    newButtons.forEach(button => {
+        button.addEventListener('click', async function(e) {
             e.preventDefault();
             e.stopPropagation();
             
             const action = this.getAttribute('data-action');
             const id = parseInt(this.getAttribute('data-id'));
             
-            console.log(`Ação: ${action}, ID: ${id}`); // Debug
+            console.log(`🎯 Botão clicado - Ação: ${action}, ID: ${id}`);
+            console.log("📚 Matérias disponíveis no momento do clique:");
+            logSubjects();
+            
+            // Verificar se a matéria existe
+            const subject = subjects.find(s => s.id === id);
+            if (!subject) {
+                console.error(`❌ Matéria com ID ${id} não encontrada no array!`);
+                console.log("🔍 IDs disponíveis:", subjects.map(s => s.id));
+                alert("Erro: Matéria não encontrada. Recarregando dados...");
+                await carregarMaterias();
+                return;
+            }
+            
+            console.log("✅ Matéria encontrada:", subject);
             
             switch(action) {
                 case 'register':
                     registerContent(id);
                     break;
                 case 'complete':
-                    completeSubject(id);
+                    await completeSubject(id);
                     break;
                 case 'delete':
                     deleteSubject(id);
@@ -997,15 +1073,18 @@ function attachSubjectEventListeners() {
             }
         });
     });
+    
+    console.log("✅ Event listeners anexados com sucesso");
 }
 
 function registerContent(id) {
-    console.log("registerContent chamado com ID:", id); // Debug
+    console.log("📝 registerContent chamado com ID:", id);
     
     const subject = subjects.find(s => s.id === id);
     
     if (!subject) {
-        console.error("Matéria não encontrada:", id);
+        console.error("❌ Matéria não encontrada:", id);
+        alert("Erro ao carregar matéria. Tente novamente.");
         return;
     }
     
@@ -1016,6 +1095,8 @@ function registerContent(id) {
     
     currentSubjectId = id;
     
+    console.log("✅ Abrindo modal para:", subject.nome);
+    
     document.getElementById('contentModalLabel').textContent = `Conteúdo de ${subject.nome}`;
     document.getElementById('contentText').value = subject.conteudo || '';
     
@@ -1024,6 +1105,7 @@ function registerContent(id) {
 }
 
 function closeContentModal() {
+    console.log("❌ Fechando modal de conteúdo");
     const modal = document.getElementById('contentModal');
     modal.style.display = 'none';
     document.getElementById('contentText').value = '';
@@ -1031,29 +1113,53 @@ function closeContentModal() {
 }
 
 async function saveContent() {
-    if (currentSubjectId) {
-        const conteudo = document.getElementById('contentText').value.trim();
+    if (!currentSubjectId) {
+        console.warn("⚠️ Nenhuma matéria selecionada");
+        return;
+    }
+    
+    const conteudo = document.getElementById('contentText').value.trim();
+    
+    console.log("💾 Salvando conteúdo para matéria ID:", currentSubjectId);
+    
+    try {
+        const resp = await fetch(`${API_URL}/materias/${currentSubjectId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ conteudo })
+        });
         
-        try {
-            const resp = await fetch(`${API_URL}/materias/${currentSubjectId}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ conteudo })
-            });
-            
-            const updated = await resp.json();
-            subjects = subjects.map(s => (s.id === updated.id ? updated : s));
-            renderSubjects();
-            closeContentModal();
-        } catch (err) {
-            console.error("Erro ao salvar conteúdo:", err);
-            alert("Erro ao salvar conteúdo. Tente novamente.");
+        if (!resp.ok) {
+            throw new Error(`HTTP error! status: ${resp.status}`);
         }
+        
+        const updated = await resp.json();
+        
+        console.log("✅ Conteúdo salvo:", updated);
+        
+        // Atualizar o array global
+        subjects = subjects.map(s => (s.id === updated.id ? updated : s));
+        
+        logSubjects();
+        renderSubjects();
+        closeContentModal();
+        
+    } catch (err) {
+        console.error("❌ Erro ao salvar conteúdo:", err);
+        alert("Erro ao salvar conteúdo. Tente novamente.");
     }
 }
 
 async function completeSubject(id) {
-    console.log("completeSubject chamado com ID:", id); // Debug
+    console.log("✅ completeSubject chamado com ID:", id);
+    
+    const subject = subjects.find(s => s.id === id);
+    
+    if (!subject) {
+        console.error("❌ Matéria não encontrada:", id);
+        alert("Erro ao carregar matéria. Tente novamente.");
+        return;
+    }
     
     try {
         const resp = await fetch(`${API_URL}/materias/${id}`, {
@@ -1062,26 +1168,40 @@ async function completeSubject(id) {
             body: JSON.stringify({ concluida: true })
         });
         
+        if (!resp.ok) {
+            throw new Error(`HTTP error! status: ${resp.status}`);
+        }
+        
         const updated = await resp.json();
+        
+        console.log("✅ Matéria concluída:", updated);
+        
+        // Atualizar o array global
         subjects = subjects.map(s => (s.id === updated.id ? updated : s));
+        
+        logSubjects();
         renderSubjects();
+        
     } catch (err) {
-        console.error("Erro ao concluir matéria:", err);
+        console.error("❌ Erro ao concluir matéria:", err);
         alert("Erro ao concluir matéria. Tente novamente.");
     }
 }
 
 function deleteSubject(id) {
-    console.log("deleteSubject chamado com ID:", id); // Debug
+    console.log("🗑️ deleteSubject chamado com ID:", id);
     
     const subject = subjects.find(s => s.id === id);
     
     if (!subject) {
-        console.error("Matéria não encontrada:", id);
+        console.error("❌ Matéria não encontrada:", id);
+        alert("Erro ao carregar matéria. Tente novamente.");
         return;
     }
     
     subjectToDelete = id;
+    
+    console.log("⚠️ Preparando para excluir:", subject.nome);
     
     document.getElementById('deleteModalText').textContent = 
         `Tem certeza que deseja excluir a matéria "${subject.nome}"?`;
@@ -1091,25 +1211,41 @@ function deleteSubject(id) {
 }
 
 function closeDeleteModal() {
+    console.log("❌ Fechando modal de exclusão");
     const modal = document.getElementById('deleteModal');
     modal.style.display = 'none';
     subjectToDelete = null;
 }
 
 async function confirmDelete() {
-    if (subjectToDelete !== null) {
-        try {
-            await fetch(`${API_URL}/materias/${subjectToDelete}`, {
-                method: "DELETE"
-            });
-            
-            subjects = subjects.filter(s => s.id !== subjectToDelete);
-            renderSubjects();
-            closeDeleteModal();
-        } catch (err) {
-            console.error("Erro ao excluir matéria:", err);
-            alert("Erro ao excluir matéria. Tente novamente.");
+    if (subjectToDelete === null) {
+        console.warn("⚠️ Nenhuma matéria selecionada para exclusão");
+        return;
+    }
+    
+    console.log("🗑️ Confirmando exclusão da matéria ID:", subjectToDelete);
+    
+    try {
+        const resp = await fetch(`${API_URL}/materias/${subjectToDelete}`, {
+            method: "DELETE"
+        });
+        
+        if (!resp.ok) {
+            throw new Error(`HTTP error! status: ${resp.status}`);
         }
+        
+        console.log("✅ Matéria excluída do backend");
+        
+        // Remover do array global
+        subjects = subjects.filter(s => s.id !== subjectToDelete);
+        
+        logSubjects();
+        renderSubjects();
+        closeDeleteModal();
+        
+    } catch (err) {
+        console.error("❌ Erro ao excluir matéria:", err);
+        alert("Erro ao excluir matéria. Tente novamente.");
     }
 }
 
