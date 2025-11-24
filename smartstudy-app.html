@@ -858,7 +858,7 @@ document.getElementById('pauseBtn').addEventListener('click', pauseTimer);
 document.getElementById('resetBtn').addEventListener('click', resetTimer);
 
 
-      // ========== GESTÃO DE MATÉRIAS (VERSÃO COMPLETA CORRIGIDA) ==========
+// ========== GESTÃO DE MATÉRIAS (VERSÃO COMPLETA CORRIGIDA) ==========
 
 let subjects = [];
 let currentSubjectId = null;
@@ -888,8 +888,12 @@ async function carregarMaterias() {
         
         const data = await resp.json();
         
-        // CRÍTICO: Atualizar o array global
-        subjects = data;
+        // CRÍTICO: Converter IDs para número e atualizar o array global
+        subjects = data.map(materia => ({
+            ...materia,
+            id: parseInt(materia.id),
+            usuarioid: parseInt(materia.usuarioid)
+        }));
         
         console.log("✅ Matérias carregadas com sucesso:");
         logSubjects();
@@ -933,10 +937,17 @@ async function addSubject() {
 
         const novaMateria = await resp.json();
         
-        console.log("✅ Matéria criada:", novaMateria);
+        // Converter IDs para número
+        const materiaConvertida = {
+            ...novaMateria,
+            id: parseInt(novaMateria.id),
+            usuarioid: parseInt(novaMateria.usuarioid)
+        };
+        
+        console.log("✅ Matéria criada:", materiaConvertida);
         
         // Adicionar ao array global
-        subjects.push(novaMateria);
+        subjects.push(materiaConvertida);
         
         logSubjects();
         renderSubjects();
@@ -1048,8 +1059,8 @@ function attachSubjectEventListeners() {
             console.log("📚 Matérias disponíveis no momento do clique:");
             logSubjects();
             
-            // Verificar se a matéria existe (comparando ambos os tipos)
-            const subject = subjects.find(s => s.id == id || s.id === id || parseInt(s.id) === id);
+            // Verificar se a matéria existe
+            const subject = subjects.find(s => s.id === id);
             if (!subject) {
                 console.error(`❌ Matéria com ID ${id} não encontrada no array!`);
                 console.log("🔍 IDs disponíveis:", subjects.map(s => s.id));
@@ -1085,7 +1096,7 @@ function attachSubjectEventListeners() {
 function registerContent(id) {
     console.log("📝 registerContent chamado com ID:", id);
     
-    const subject = subjects.find(s => s.id == id || parseInt(s.id) === id);
+    const subject = subjects.find(s => s.id === id);
     
     if (!subject) {
         console.error("❌ Matéria não encontrada:", id);
@@ -1140,10 +1151,17 @@ async function saveContent() {
         
         const updated = await resp.json();
         
-        console.log("✅ Conteúdo salvo:", updated);
+        // Converter IDs para número
+        const updatedConvertido = {
+            ...updated,
+            id: parseInt(updated.id),
+            usuarioid: parseInt(updated.usuarioid)
+        };
+        
+        console.log("✅ Conteúdo salvo:", updatedConvertido);
         
         // Atualizar o array global
-        subjects = subjects.map(s => (s.id === updated.id ? updated : s));
+        subjects = subjects.map(s => (s.id === updatedConvertido.id ? updatedConvertido : s));
         
         logSubjects();
         renderSubjects();
@@ -1158,7 +1176,7 @@ async function saveContent() {
 async function completeSubject(id) {
     console.log("✅ completeSubject chamado com ID:", id);
     
-    const subject = subjects.find(s => s.id == id || parseInt(s.id) === id);
+    const subject = subjects.find(s => s.id === id);
     
     if (!subject) {
         console.error("❌ Matéria não encontrada:", id);
@@ -1179,10 +1197,17 @@ async function completeSubject(id) {
         
         const updated = await resp.json();
         
-        console.log("✅ Matéria concluída:", updated);
+        // Converter IDs para número
+        const updatedConvertido = {
+            ...updated,
+            id: parseInt(updated.id),
+            usuarioid: parseInt(updated.usuarioid)
+        };
+        
+        console.log("✅ Matéria concluída:", updatedConvertido);
         
         // Atualizar o array global
-        subjects = subjects.map(s => (s.id === updated.id ? updated : s));
+        subjects = subjects.map(s => (s.id === updatedConvertido.id ? updatedConvertido : s));
         
         logSubjects();
         renderSubjects();
@@ -1196,7 +1221,7 @@ async function completeSubject(id) {
 function deleteSubject(id) {
     console.log("🗑️ deleteSubject chamado com ID:", id);
     
-    const subject = subjects.find(s => s.id == id || parseInt(s.id) === id);
+    const subject = subjects.find(s => s.id === id);
     
     if (!subject) {
         console.error("❌ Matéria não encontrada:", id);
