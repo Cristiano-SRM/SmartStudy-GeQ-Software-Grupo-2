@@ -10,6 +10,19 @@ const { Pool } = require("pg");
 const app = express();
 const PORT = 3000;
 
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
+
 // CORS — libere seu GitHub Pages
 app.use(cors({
   origin: 'https://cristiano-srm.github.io',
