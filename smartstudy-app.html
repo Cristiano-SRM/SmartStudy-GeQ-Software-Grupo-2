@@ -858,7 +858,7 @@ document.getElementById('pauseBtn').addEventListener('click', pauseTimer);
 document.getElementById('resetBtn').addEventListener('click', resetTimer);
 
 
-        // ========== GESTÃO DE MATÉRIAS (VERSÃO COMPLETA CORRIGIDA) ==========
+      // ========== GESTÃO DE MATÉRIAS (VERSÃO COMPLETA CORRIGIDA) ==========
 
 let subjects = [];
 let currentSubjectId = null;
@@ -1036,7 +1036,7 @@ function attachSubjectEventListeners() {
     // Re-selecionar após clonar
     const newButtons = document.querySelectorAll('#subjectsList button[data-action]');
     
-    newButtons.forEach(button => {
+            newButtons.forEach(button => {
         button.addEventListener('click', async function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -1048,11 +1048,16 @@ function attachSubjectEventListeners() {
             console.log("📚 Matérias disponíveis no momento do clique:");
             logSubjects();
             
-            // Verificar se a matéria existe
-            const subject = subjects.find(s => s.id === id);
+            // Verificar se a matéria existe (comparando ambos os tipos)
+            const subject = subjects.find(s => s.id == id || s.id === id || parseInt(s.id) === id);
             if (!subject) {
                 console.error(`❌ Matéria com ID ${id} não encontrada no array!`);
                 console.log("🔍 IDs disponíveis:", subjects.map(s => s.id));
+                console.log("🔍 Matérias completas:", subjects);
+                console.log("🔍 Procurando ID:", id, "Tipo:", typeof id);
+                subjects.forEach(s => {
+                    console.log(`  - Matéria: ${s.nome}, ID: ${s.id}, Tipo: ${typeof s.id}`);
+                });
                 alert("Erro: Matéria não encontrada. Recarregando dados...");
                 await carregarMaterias();
                 return;
@@ -1080,7 +1085,7 @@ function attachSubjectEventListeners() {
 function registerContent(id) {
     console.log("📝 registerContent chamado com ID:", id);
     
-    const subject = subjects.find(s => s.id === id);
+    const subject = subjects.find(s => s.id == id || parseInt(s.id) === id);
     
     if (!subject) {
         console.error("❌ Matéria não encontrada:", id);
@@ -1153,7 +1158,7 @@ async function saveContent() {
 async function completeSubject(id) {
     console.log("✅ completeSubject chamado com ID:", id);
     
-    const subject = subjects.find(s => s.id === id);
+    const subject = subjects.find(s => s.id == id || parseInt(s.id) === id);
     
     if (!subject) {
         console.error("❌ Matéria não encontrada:", id);
@@ -1191,7 +1196,7 @@ async function completeSubject(id) {
 function deleteSubject(id) {
     console.log("🗑️ deleteSubject chamado com ID:", id);
     
-    const subject = subjects.find(s => s.id === id);
+    const subject = subjects.find(s => s.id == id || parseInt(s.id) === id);
     
     if (!subject) {
         console.error("❌ Matéria não encontrada:", id);
