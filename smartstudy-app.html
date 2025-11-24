@@ -1414,45 +1414,79 @@ async function carregarGraficoSemanal() {
     const usuario = getUsuarioLogado();
     if (!usuario) return;
 
-    const resp = await fetch(`${API_URL}/estudos/semana/${usuario.id}`);
-    const dados = await resp.json(); // { "2025-11-18": 25, ... }
+    try {
+        const resp = await fetch(`${API_URL}/estudos/semana/${usuario.id}`);
+        const dados = await resp.json(); // { "2025-11-24": 25, ... }
 
-    const labels = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-    const barras = document.querySelectorAll(".bar-chart .bar");
+        console.log("📊 Dados recebidos do backend:", dados);
 
-    const mapaDias = {
-        1: "Seg",
-        2: "Ter",
-        3: "Qua",
-        4: "Qui",
-        5: "Sex",
-        6: "Sáb",
-        0: "Dom"
-    };
+        const labels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+        const barras = document.querySelectorAll(".bar-chart .bar");
 
-    const minutosPorDia = {
-        "Seg": 0, "Ter": 0, "Qua": 0,
-        "Qui": 0, "Sex": 0, "Sáb": 0, "Dom": 0
-    };
+        // Mapa: número do dia da semana → label
+        const mapaDias = {
+            0: "Dom",
+            1: "Seg",
+            2: "Ter",
+            3: "Qua",
+            4: "Qui",
+            5: "Sex",
+            6: "Sáb"
+        };
 
-    for (const [data, minutos] of Object.entries(dados)) {
-        const partes = data.split("-");
-        const d = new Date(Date.UTC(partes[0], partes[1] - 1, partes[2]));
+        // Inicializar todos os dias com zero
+        const minutosPorDia = {
+            "Dom": 0, "Seg": 0, "Ter": 0,
+            "Qua": 0, "Qui": 0, "Sex": 0, "Sáb": 0
+        };
 
-        const diaSemana = mapaDias[d.getUTCDay()];
-        minutosPorDia[diaSemana] += minutos;
+        // Processar dados do backend
+        for (const [dataStr, minutos] of Object.entries(dados)) {
+            // CRÍTICO: Usar parseamento simples SEM timezone conversion
+            // Backend retorna: "2025-11-24"
+            // Queremos: dia da semana DESSA data específica
+            
+            const partes = dataStr.split("-");
+            const ano = parseInt(partes[0]);
+            const mes = parseInt(partes[1]) - 1; // JavaScript meses são 0-11
+            const dia = parseInt(partes[2]);
+            
+            // Criar data LOCAL (não UTC)
+            const data = new Date(ano, mes, dia);
+            
+            // Obter dia da semana (0 = Domingo, 6 = Sábado)
+            const diaSemana = data.getDay();
+            const labelDia = mapaDias[diaSemana];
+            
+            console.log(`  📅 ${dataStr} → ${labelDia} (${diaSemana}) → ${minutos} min`);
+            
+            minutosPorDia[labelDia] += minutos;
+        }
+
+        console.log("📊 Minutos agrupados por dia:", minutosPorDia);
+
+        // Encontrar o valor máximo para escalar o gráfico
+        const max = Math.max(...Object.values(minutosPorDia)) || 1;
+        console.log("📈 Valor máximo:", max, "minutos");
+
+        // Atualizar as barras do gráfico
+        barras.forEach((bar, i) => {
+            // IMPORTANTE: A ordem das barras no HTML é Seg, Ter, Qua, Qui, Sex, Sáb, Dom
+            // Mas queremos mostrar na ordem certa
+            const labelsOrdenados = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+            const dia = labelsOrdenados[i];
+            const valor = minutosPorDia[dia];
+
+            const porcentagem = Math.round((valor / max) * 100);
+
+            bar.style.height = porcentagem + "%";
+            
+            console.log(`  📊 Barra ${i} (${dia}): ${valor} min → ${porcentagem}%`);
+        });
+
+    } catch (err) {
+        console.error("❌ Erro ao carregar gráfico semanal:", err);
     }
-
-    const max = Math.max(...Object.values(minutosPorDia)) || 1;
-
-    barras.forEach((bar, i) => {
-        const dia = labels[i];
-        const valor = minutosPorDia[dia];
-
-        const porcentagem = Math.round((valor / max) * 100);
-
-        bar.style.height = porcentagem + "%";
-    });
 }
 
 async function exportarRelatorio() {
