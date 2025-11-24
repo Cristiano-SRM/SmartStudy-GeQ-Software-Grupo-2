@@ -874,12 +874,6 @@ document.getElementById('resetBtn').addEventListener('click', resetTimer);
     renderSubjects();
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    carregarMaterias();
-    // ... resto já existente
-});
-
-
         async function addSubject() {
     const name = document.getElementById('subjectName').value;
     const color = document.getElementById('subjectColor').value;
@@ -980,9 +974,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const modal = document.getElementById('contentModal');
     modal.style.display = 'flex';
-
     setTimeout(() => modal.classList.add('active'), 10);
 }
+
 
 
 
@@ -1043,11 +1037,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const modal = document.getElementById('deleteModal');
     modal.style.display = 'flex';
-
     setTimeout(() => modal.classList.add('active'), 10);
 }
-
-
 
 
         function closeDeleteModal() {
@@ -1068,8 +1059,6 @@ document.addEventListener("DOMContentLoaded", () => {
         closeDeleteModal();
     }
 }
-
-
 
         // ========== CHAT IA ==========
         function sendMessage() {
@@ -1121,8 +1110,9 @@ document.addEventListener("DOMContentLoaded", () => {
         // Página inicia sem matérias de exemplo
         
         document.addEventListener("DOMContentLoaded", () => {
-    const logoutBtn = document.getElementById("logout-btn");
+    carregarMaterias();
 
+    const logoutBtn = document.getElementById("logout-btn");
     if (logoutBtn) {
         logoutBtn.addEventListener("click", () => {
             localStorage.removeItem("usuarioLogado");
@@ -1130,6 +1120,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
 
 /***********************************************
  *   FUNÇÕES PARA ENVIAR SESSÕES AO BACKEND
