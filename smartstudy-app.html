@@ -962,14 +962,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         function registerContent(id) {
-            const subject = subjects.find(s => s.id === id);
-            if (subject && !subject.completed) {
-                currentSubjectId = id;
-                document.getElementById('contentModalLabel').textContent = `Conteúdo de ${subject.name}`;
-                document.getElementById('contentText').value = subject.content || '';
-                document.getElementById('contentModal').style.display = 'flex';
-            }
-        }
+    const subject = subjects.find(s => s.id === id);
+    if (subject && !subject.concluida) {
+
+        currentSubjectId = id;
+
+        document.getElementById('contentModalLabel').textContent =
+            `Conteúdo de ${subject.nome}`;
+
+        document.getElementById('contentText').value = subject.conteudo || '';
+
+        const modal = document.getElementById('contentModal');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('active'), 10);
+    }
+}
+
 
         function closeContentModal() {
             document.getElementById('contentModal').style.display = 'none';
@@ -979,14 +987,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         async function saveContent() {
     if (currentSubjectId) {
-        // saveContent
-const conteudo = document.getElementById('contentText').value.trim();
-await fetch(`${API_URL}/materias/${currentSubjectId}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ conteudo })
-});
 
+        const conteudo = document.getElementById('contentText').value.trim();
+
+        const resp = await fetch(`${API_URL}/materias/${currentSubjectId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ conteudo })
+        });
 
         const updated = await resp.json();
 
@@ -998,18 +1006,21 @@ await fetch(`${API_URL}/materias/${currentSubjectId}`, {
 }
 
 
+
         async function completeSubject(id) {
     const resp = await fetch(`${API_URL}/materias/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ concluida: true })
-});
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ concluida: true })
+    });
 
     const updated = await resp.json();
 
     subjects = subjects.map(s => (s.id === updated.id ? updated : s));
+
     renderSubjects();
 }
+
 
 
         function deleteSubject(id) {
@@ -1029,15 +1040,18 @@ await fetch(`${API_URL}/materias/${currentSubjectId}`, {
 
         async function confirmDelete() {
     if (subjectToDelete !== null) {
+
         await fetch(`${API_URL}/materias/${subjectToDelete}`, {
             method: "DELETE"
         });
 
         subjects = subjects.filter(s => s.id !== subjectToDelete);
+
         renderSubjects();
         closeDeleteModal();
     }
 }
+
 
 
         // ========== CHAT IA ==========
