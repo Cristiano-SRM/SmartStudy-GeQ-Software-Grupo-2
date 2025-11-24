@@ -858,23 +858,27 @@ document.getElementById('pauseBtn').addEventListener('click', pauseTimer);
 document.getElementById('resetBtn').addEventListener('click', resetTimer);
 
 
-        // ========== GESTÃO DE MATÉRIAS ==========
-        let subjects = [];
-        let currentSubjectId = null;
-        let subjectToDelete = null;
+        // ========== GESTÃO DE MATÉRIAS (VERSÃO CORRIGIDA) ==========
 
-        async function carregarMaterias() {
+let subjects = [];
+let currentSubjectId = null;
+let subjectToDelete = null;
+
+async function carregarMaterias() {
     const usuario = getUsuarioLogado();
     if (!usuario) return;
 
-    const resp = await fetch(`${API_URL}/materias/${usuario.id}`);
-    const data = await resp.json();
-
-    subjects = data; 
-    renderSubjects();
+    try {
+        const resp = await fetch(`${API_URL}/materias/${usuario.id}`);
+        const data = await resp.json();
+        subjects = data;
+        renderSubjects();
+    } catch (err) {
+        console.error("Erro ao carregar matérias:", err);
+    }
 }
 
-        async function addSubject() {
+async function addSubject() {
     const name = document.getElementById('subjectName').value;
     const color = document.getElementById('subjectColor').value;
     const usuario = getUsuarioLogado();
@@ -890,24 +894,26 @@ document.getElementById('resetBtn').addEventListener('click', resetTimer);
         cor: color
     };
 
-    const resp = await fetch(`${API_URL}/materias`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
+    try {
+        const resp = await fetch(`${API_URL}/materias`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
 
-    const novaMateria = await resp.json();
+        const novaMateria = await resp.json();
+        subjects.push(novaMateria);
+        renderSubjects();
 
-    subjects.push(novaMateria);
-
-    renderSubjects();
-
-    document.getElementById('subjectName').value = '';
-    document.getElementById('subjectColor').value = '#5B8DEF';
+        document.getElementById('subjectName').value = '';
+        document.getElementById('subjectColor').value = '#5B8DEF';
+    } catch (err) {
+        console.error("Erro ao adicionar matéria:", err);
+        alert("Erro ao adicionar matéria. Tente novamente.");
+    }
 }
 
-
-        function renderSubjects() {
+function renderSubjects() {
     const container = document.getElementById('subjectsList');
     container.innerHTML = '';
     
@@ -918,145 +924,192 @@ document.getElementById('resetBtn').addEventListener('click', resetTimer);
     
     subjects.forEach(subject => {
         const card = document.createElement('div');
-
-        // agora usando o campo 'concluida' vindo do banco
         card.className = 'subject-card' + (subject.concluida ? ' completed' : '');
-
-        // cor vindo do campo 'cor' do banco
         card.style.borderLeftColor = subject.cor || '#5B8DEF';
         
         let contentHTML = '';
-        // conteúdo salvo no campo 'conteudo'
         if (subject.conteudo) {
             contentHTML = `<div class="subject-content">${subject.conteudo}</div>`;
         }
         
-        const disabledAttr = subject.concluida 
-            ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' 
-            : '';
+        const isDisabled = subject.concluida;
         
         card.innerHTML = `
             <div class="subject-name">${subject.nome}</div>
             ${contentHTML}
             <div class="subject-actions">
-                <button class="btn btn-primary btn-small" onclick="registerContent(${subject.id})" ${disabledAttr}>
+                <button 
+                    class="btn btn-primary btn-small" 
+                    data-action="register" 
+                    data-id="${subject.id}"
+                    ${isDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}
+                >
                     📝 Registrar Conteúdo
                 </button>
-                <button class="btn btn-secondary btn-small" onclick="completeSubject(${subject.id})" ${disabledAttr}>
+                <button 
+                    class="btn btn-secondary btn-small" 
+                    data-action="complete" 
+                    data-id="${subject.id}"
+                    ${isDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}
+                >
                     ✅ Concluir
                 </button>
-                <button class="btn-delete" onclick="event.stopPropagation(); deleteSubject(${subject.id})">
+                <button 
+                    class="btn-delete" 
+                    data-action="delete" 
+                    data-id="${subject.id}"
+                >
                     🗑️
                 </button>
             </div>
         `;
+        
         container.appendChild(card);
+    });
+    
+    // Adicionar event listeners APÓS renderizar
+    attachSubjectEventListeners();
+}
+
+function attachSubjectEventListeners() {
+    const buttons = document.querySelectorAll('#subjectsList button[data-action]');
+    
+    buttons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const action = this.getAttribute('data-action');
+            const id = parseInt(this.getAttribute('data-id'));
+            
+            console.log(`Ação: ${action}, ID: ${id}`); // Debug
+            
+            switch(action) {
+                case 'register':
+                    registerContent(id);
+                    break;
+                case 'complete':
+                    completeSubject(id);
+                    break;
+                case 'delete':
+                    deleteSubject(id);
+                    break;
+            }
+        });
     });
 }
 
-
-        function registerContent(id) {
+function registerContent(id) {
+    console.log("registerContent chamado com ID:", id); // Debug
+    
     const subject = subjects.find(s => s.id === id);
-
-    if (!subject) return;
-
+    
+    if (!subject) {
+        console.error("Matéria não encontrada:", id);
+        return;
+    }
+    
     if (subject.concluida) {
         alert("Esta matéria já foi concluída.");
         return;
     }
-
+    
     currentSubjectId = id;
-
-    document.getElementById('contentModalLabel').textContent =
-        `Conteúdo de ${subject.nome}`;
-
+    
+    document.getElementById('contentModalLabel').textContent = `Conteúdo de ${subject.nome}`;
     document.getElementById('contentText').value = subject.conteudo || '';
-
+    
     const modal = document.getElementById('contentModal');
     modal.style.display = 'flex';
-    setTimeout(() => modal.classList.add('active'), 10);
 }
 
+function closeContentModal() {
+    const modal = document.getElementById('contentModal');
+    modal.style.display = 'none';
+    document.getElementById('contentText').value = '';
+    currentSubjectId = null;
+}
 
-
-
-
-        function closeContentModal() {
-            document.getElementById('contentModal').style.display = 'none';
-            document.getElementById('contentText').value = '';
-            currentSubjectId = null;
-        }
-
-        async function saveContent() {
+async function saveContent() {
     if (currentSubjectId) {
-
         const conteudo = document.getElementById('contentText').value.trim();
-
-        const resp = await fetch(`${API_URL}/materias/${currentSubjectId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ conteudo })
-        });
-
-        const updated = await resp.json();
-
-        subjects = subjects.map(s => (s.id === updated.id ? updated : s));
-
-        renderSubjects();
-        closeContentModal();
+        
+        try {
+            const resp = await fetch(`${API_URL}/materias/${currentSubjectId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ conteudo })
+            });
+            
+            const updated = await resp.json();
+            subjects = subjects.map(s => (s.id === updated.id ? updated : s));
+            renderSubjects();
+            closeContentModal();
+        } catch (err) {
+            console.error("Erro ao salvar conteúdo:", err);
+            alert("Erro ao salvar conteúdo. Tente novamente.");
+        }
     }
 }
 
-
-
-        async function completeSubject(id) {
-    const resp = await fetch(`${API_URL}/materias/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ concluida: true })
-    });
-
-    const updated = await resp.json();
-
-    subjects = subjects.map(s => (s.id === updated.id ? updated : s));
-
-    renderSubjects();
+async function completeSubject(id) {
+    console.log("completeSubject chamado com ID:", id); // Debug
+    
+    try {
+        const resp = await fetch(`${API_URL}/materias/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ concluida: true })
+        });
+        
+        const updated = await resp.json();
+        subjects = subjects.map(s => (s.id === updated.id ? updated : s));
+        renderSubjects();
+    } catch (err) {
+        console.error("Erro ao concluir matéria:", err);
+        alert("Erro ao concluir matéria. Tente novamente.");
+    }
 }
 
-
-
-        function deleteSubject(id) {
+function deleteSubject(id) {
+    console.log("deleteSubject chamado com ID:", id); // Debug
+    
     const subject = subjects.find(s => s.id === id);
-
-    if (!subject) return;
-
+    
+    if (!subject) {
+        console.error("Matéria não encontrada:", id);
+        return;
+    }
+    
     subjectToDelete = id;
-
-    document.getElementById('deleteModalText').textContent =
+    
+    document.getElementById('deleteModalText').textContent = 
         `Tem certeza que deseja excluir a matéria "${subject.nome}"?`;
-
+    
     const modal = document.getElementById('deleteModal');
     modal.style.display = 'flex';
-    setTimeout(() => modal.classList.add('active'), 10);
 }
 
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    modal.style.display = 'none';
+    subjectToDelete = null;
+}
 
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').style.display = 'none';
-            subjectToDelete = null;
-        }
-
-        async function confirmDelete() {
+async function confirmDelete() {
     if (subjectToDelete !== null) {
-
-        await fetch(`${API_URL}/materias/${subjectToDelete}`, {
-            method: "DELETE"
-        });
-
-        subjects = subjects.filter(s => s.id !== subjectToDelete);
-
-        renderSubjects();
-        closeDeleteModal();
+        try {
+            await fetch(`${API_URL}/materias/${subjectToDelete}`, {
+                method: "DELETE"
+            });
+            
+            subjects = subjects.filter(s => s.id !== subjectToDelete);
+            renderSubjects();
+            closeDeleteModal();
+        } catch (err) {
+            console.error("Erro ao excluir matéria:", err);
+            alert("Erro ao excluir matéria. Tente novamente.");
+        }
     }
 }
 
