@@ -1024,14 +1024,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         function deleteSubject(id) {
-            const subject = subjects.find(s => s.id === id);
-            if (subject) {
-                subjectToDelete = id;
-                document.getElementById('deleteModalText').textContent = 
-                    `Tem certeza que deseja excluir a matéria "${subject.name}"?`;
-                document.getElementById('deleteModal').style.display = 'flex';
-            }
-        }
+    const subject = subjects.find(s => s.id === id);
+    if (subject) {
+        subjectToDelete = id;
+        document.getElementById('deleteModalText').textContent = 
+            `Tem certeza que deseja excluir a matéria "${subject.nome}"?`;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+}
+
 
         function closeDeleteModal() {
             document.getElementById('deleteModal').style.display = 'none';
