@@ -205,7 +205,7 @@ app.get("/streak/:usuarioId", async (req, res) => {
 });
 
 // -----------------------------------------
-// Últimos 7 dias
+// Últimos 7 dias (CORRIGIDO)
 // -----------------------------------------
 app.get('/estudos/semana/:usuarioId', async (req, res) => {
   const usuarioId = req.params.usuarioId;
@@ -217,27 +217,58 @@ app.get('/estudos/semana/:usuarioId', async (req, res) => {
     );
 
     const raw = result.rows;
+    
+    console.log("🔍 DEBUG - Total de registros:", raw.length);
+    console.log("🔍 DEBUG - Primeiro registro:", raw[0]);
+    console.log("🔍 DEBUG - Tipo de r.data:", raw.length > 0 ? typeof raw[0].data : 'N/A');
+    console.log("🔍 DEBUG - Valor de r.data:", raw.length > 0 ? raw[0].data : 'N/A');
+    
     const mapa = {};
 
-    // inicia com zeros
+    // Inicializar últimos 7 dias com zeros
     for (let i = 0; i < 7; i++) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      mapa[d.toISOString().split("T")[0]] = 0;
+      const dataStr = d.toISOString().split("T")[0];
+      mapa[dataStr] = 0;
     }
 
-    // soma minutos
+    console.log("📅 Inicializando últimos 7 dias:", Object.keys(mapa));
+
+    // Somar minutos de cada sessão
     raw.forEach(r => {
-    const dataFormatada = r.data.split("T")[0];   // <- NORMALIZA!
-    if (mapa[dataFormatada] !== undefined) {
-        mapa[dataFormatada] += r.minutos;
-    }
-});
+      try {
+        let dataFormatada;
+        
+        // Se r.data for um objeto Date do PostgreSQL
+        if (r.data instanceof Date) {
+          dataFormatada = r.data.toISOString().split("T")[0];
+        } 
+        // Se r.data for uma string ISO
+        else if (typeof r.data === 'string') {
+          dataFormatada = r.data.split("T")[0];
+        }
+        else {
+          console.warn("⚠️ Formato de data desconhecido:", r.data);
+          return;
+        }
+
+        console.log(`  📊 Processando: ${dataFormatada} → ${r.minutos} min`);
+
+        if (mapa[dataFormatada] !== undefined) {
+          mapa[dataFormatada] += r.minutos;
+        }
+      } catch (err) {
+        console.error("❌ Erro ao processar registro:", r, err);
+      }
+    });
+
+    console.log("✅ Mapa final:", mapa);
 
     res.json(mapa);
 
   } catch (err) {
-    console.error(err);
+    console.error("❌ Erro ao carregar semana:", err);
     res.status(500).json({ message: "Erro ao carregar semana." });
   }
 });
