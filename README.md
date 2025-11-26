@@ -4,7 +4,7 @@ O SmartStudy é um protótipo de aplicação web voltado para auxiliar estudante
 O sistema permite cadastro/login de usuários, criação e gerenciamento de matérias, registro de conteúdo estudado, acompanhamento de progresso e utilização de um cronômetro Pomodoro.
 
 O projeto foi desenvolvido com foco em simplicidade, uso de tecnologias modernas e hospedagem totalmente gratuita.
-
+--------------------------------------------------------------------------------------------------
 Arquitetura da Aplicação
 
 O SmartStudy é dividido em três camadas:
@@ -38,7 +38,7 @@ matérias cadastradas,
 conteúdos registrados,
 
 progresso (minutos estudados, streaks, etc.)
-
+--------------------------------------------------------------------------------------------------
 Links Importantes
 
 Frontend (GitHub Pages)	https://cristiano-srm.github.io/SmartStudy-GeQ-Software-Grupo-2/SmartStudy.html
@@ -46,7 +46,7 @@ Frontend (GitHub Pages)	https://cristiano-srm.github.io/SmartStudy-GeQ-Software-
 Backend (Render)	https://smartstudy-backend-fqd0.onrender.com
 
 Repositório do Projeto	https://github.com/Cristiano-SRM/SmartStudy-GeQ-Software-Grupo-2
-
+--------------------------------------------------------------------------------------------------
 Funcionalidades Principais
  Autenticação
 
