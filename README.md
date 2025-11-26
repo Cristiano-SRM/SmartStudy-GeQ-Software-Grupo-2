@@ -1,69 +1,85 @@
-**SmartStudy** é um protótipo de aplicação web voltada para estudos, com foco inicial nas telas de login e cadastro de usuário.
-O sistema é dividido em duas partes:
+ SmartStudy – Aplicação Web para Organização e Estudos
 
-1. Frontend (HTML/CSS/JS) – página moderna e minimalista hospedada no GitHub Pages.
+O SmartStudy é um protótipo de aplicação web voltado para auxiliar estudantes na organização de suas rotinas de estudo.
+O sistema permite cadastro/login de usuários, criação e gerenciamento de matérias, registro de conteúdo estudado, acompanhamento de progresso e utilização de um cronômetro Pomodoro.
 
-2. Backend (Node.js + Express + SQLite) – servidor responsável por autenticação e armazenamento dos usuários, hospedado no Render.com ou executado localmente via GitHub Codespaces.
+O projeto foi desenvolvido com foco em simplicidade, uso de tecnologias modernas e hospedagem totalmente gratuita.
 
-**Links Importantes:**
-1. Página principal (GitHub Pages) - https://cristiano-srm.github.io/SmartStudy-GeQ-Software-Grupo-2/SmartStudy.html
-2. Servidor Backend (Render) - https://smartstudy-backend-fqd0.onrender.com
-3. Repositório GitHub - https://github.com/Cristiano-SRM/SmartStudy-GeQ-Software-Grupo-2
+Arquitetura da Aplicação
 
-SmartStudy-GeQ-Software-Grupo-2/
-├── server.js              # Servidor Node.js + Express + SQLite
-├── database.db            # Banco de dados SQLite (armazenamento de usuários)
-├── SmartStudy.html        # Página de login/cadastro (frontend)
-├── package.json           # Configurações do Node.js
-├── README.md              # Este arquivo :)
-└── ...                    # Outros arquivos auxiliares (CSS, etc.)
+O SmartStudy é dividido em três camadas:
 
- **Funcionamento do Sistema**
-  **Backend** (Node + Express + SQLite)
+✔ Frontend (Interface do Usuário)
 
-O arquivo server.js cria um servidor Express que:
+Desenvolvido em HTML, CSS e JavaScript
 
-- Conecta a um banco SQLite local (database.db);
+Hospedado no GitHub Pages
 
-- Cria a tabela usuarios se não existir;
+Responsável pela interface, navegação e interações do usuário
 
-- Possui rotas:
+✔ Backend (Servidor da Aplicação)
 
- > POST /signup → Cadastra novos usuários;
+Construído em Node.js + Express
 
- > POST /login → Verifica credenciais de login;
+Hospedado no Render.com
 
- > GET / → Rota de teste (“Servidor SmartStudy funcionando!”).
+Recebe requisições do frontend e faz a ponte com o banco de dados
 
-Ao ser iniciado, o servidor roda na porta 3000 dentro do Codespaces.
+✔ Banco de Dados
 
-**Frontend** (HTML + CSS + JS)
+Utiliza Supabase (PostgreSQL em nuvem)
 
-A página SmartStudy.html contém dois formulários:
+Armazena:
 
-- Login (usuário + senha)
+usuários,
 
-- Cadastro (usuário + senha + confirmar senha)
+matérias cadastradas,
 
-**As funções JavaScript realizam chamadas fetch() para o servidor backend:**
-"
-const API_URL = "https://smartstudy-backend-fqd0.onrender.com";
+conteúdos registrados,
 
-fetch(`${API_URL}/signup`, { ... });
-fetch(`${API_URL}/login`, { ... }); 
-"
-Essas chamadas são enviadas via HTTPS para o servidor do Render.com, que responde com mensagens JSON.
+progresso (minutos estudados, streaks, etc.)
 
-**Rodando Localmente (GitHub Codespaces)**
-Passo 1: Instalando dependencias
-npm init -y
-npm install express sqlite3 body-parser cors
+Links Importantes
 
-Passo 2: Rodar o servidor local
-node server.js
+Frontend (GitHub Pages)	https://cristiano-srm.github.io/SmartStudy-GeQ-Software-Grupo-2/SmartStudy.html
 
-Você entrara num prompt de node e sera informado caso a porta 3000 esteja aberta e o server esteja online (a porta 3000 deve ser publica)
+Backend (Render)	https://smartstudy-backend-fqd0.onrender.com
 
-nota pessoal: No Render, o SQLite é funcional, mas temporário (perde dados a cada novo deploy).
- Para persistência real, recomenda-se migrar para PostgreSQL, também suportado gratuitamente pelo Render.
+Repositório do Projeto	https://github.com/Cristiano-SRM/SmartStudy-GeQ-Software-Grupo-2
 
+Funcionalidades Principais
+ Autenticação
+
+Cadastro de usuário
+
+Login persistente via LocalStorage
+
+ Gerenciamento de Matérias
+
+Criar matérias com nome e cor identificadora
+
+Registrar conteúdo estudado
+
+Marcar matéria como concluída
+
+Excluir matérias
+
+Todas as ações são persistidas no PostgreSQL via Supabase
+
+ Pomodoro
+
+Timer personalizável
+
+Contador automático de sessões
+
+Minutos estudados registrados no banco
+
+ Relatórios
+
+Gráficos simples de uso
+
+Streak de estudo
+
+Total de sessões completadas
+
+Dados carregados do banco de forma persistente
